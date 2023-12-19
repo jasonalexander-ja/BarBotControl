@@ -1,0 +1,57 @@
+﻿@inherits LayoutComponentBase
+
+<MudThemeProvider 
+    Theme="@MakeTheme()"
+    @bind-IsDarkMode="StateProvider.DarkMode" 
+/>
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <AppBar ToggleDarkMode="ToggleDarkMode" DrawerToggle="DrawerToggle" />
+    <MudDrawer @bind-Open="DrawerOpen" Elevation="1">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">BarBot Control</MudText>
+        </MudDrawerHeader>
+        <NavMenu />
+    </MudDrawer>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="my-8">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    [CascadingParameter]
+    public StateProvider StateProvider { get; set; } = new StateProvider();
+
+    bool DrawerOpen = true;
+
+    public async Task ToggleDarkMode()
+    {
+        await StateProvider.SetDarkMode(!StateProvider.DarkMode);
+        StateHasChanged();
+    }
+
+    void DrawerToggle()
+    {
+        DrawerOpen = !DrawerOpen;
+        StateHasChanged();
+    }
+
+    public static MudTheme MakeTheme()
+    {
+        var theme = new MudTheme()
+            {
+                Palette = new Palette()
+                {
+                    Primary = Colors.Pink.Default,
+                    Secondary = Colors.Cyan.Accent3,
+                }
+            };
+        theme.PaletteDark.Primary = Colors.Pink.Default;
+        theme.PaletteDark.Secondary = Colors.Cyan.Accent3;
+        return theme;
+    }
+}

@@ -1,0 +1,37 @@
+﻿
+<MudAppBar Color="Color.Primary" Elevation="0">
+    <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+    <MudSpacer />
+    @if (StateProvider.DarkMode)
+    {
+        <MudIconButton 
+            Icon="@Icons.Material.Filled.LightMode" 
+            aria-label="Light Mode" 
+            OnClick="@ToggleDarkMode"
+            Color="Color.Secondary"
+        >
+        </MudIconButton>
+    } else
+    {
+        <MudIconButton 
+            Icon="@Icons.Material.Outlined.LightMode"
+            aria-label="Dark Mode"
+            OnClick="@ToggleDarkMode"
+            Color="Color.Secondary"
+        >
+        </MudIconButton>
+    }
+    <MudIconButton Icon="@Icons.Custom.Brands.MudBlazor" Color="Color.Inherit" Href="https://mudblazor.com/" Target="_blank" />
+    <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/MudBlazor/MudBlazor/" Target="_blank" />
+</MudAppBar>
+
+@code {
+    [CascadingParameter]
+    public StateProvider StateProvider { get; set; } = new StateProvider();
+
+    [Parameter]
+    public Action DrawerToggle { get; set; } = () => { };
+    [Parameter]
+    public Func<Task> ToggleDarkMode { get; set; } = () => Task.CompletedTask;
+
+}

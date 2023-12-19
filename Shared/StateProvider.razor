@@ -1,0 +1,41 @@
+﻿@inject IJSRuntime JS
+@inject NavigationManager NavManager
+@inject ILocalStorageService LocalStorage
+@inject ISnackbar Snackbar
+
+<CascadingValue Value="@this">
+    @ChildContent
+</CascadingValue>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    public bool DarkMode { get; set; }
+
+    public async Task SetDarkMode(bool darkMode)
+    {
+        await LocalStorage.SetItemAsync("darkMode", darkMode);
+        DarkMode = darkMode;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        DarkMode = await IsDarkMode();
+    }
+
+    public async Task<bool> IsDarkMode()
+    {
+        try
+        {
+            if (await LocalStorage.ContainKeyAsync("darkMode"))
+                return await LocalStorage.GetItemAsync<bool>("darkMode");
+
+            return await JS.InvokeAsync<bool>("isDarkMode");
+        }
+        catch
+        {
+            return false;
+        }
+    }
+}
