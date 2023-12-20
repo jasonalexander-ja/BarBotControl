@@ -1,0 +1,41 @@
+﻿using Microsoft.EntityFrameworkCore;
+using BarBotControl.Models;
+
+namespace BarBotControl.Data;
+
+public class AppDbContext : DbContext
+{
+    public DbSet<Module> Modules { get; set; }
+    public DbSet<Option> Options { get; set; }
+    public DbSet<Sequence> Sequences { get; set; }
+    public DbSet<SequenceItem> SequenceItem { get; set; }
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Module>()
+            .HasMany(e => e.Options)
+            .WithOne(e => e.Module)
+            .HasForeignKey(e => e.ModuleId)
+            .IsRequired();
+
+        modelBuilder.Entity<Sequence>()
+            .HasMany(e => e.SequenceItems)
+            .WithOne(e => e.Sequence)
+            .HasForeignKey(e => e.SequenceId)
+            .IsRequired();
+
+        modelBuilder.Entity<SequenceItem>()
+            .HasOne(e => e.Module)
+            .WithMany(e => e.SequenceItems)
+            .HasForeignKey(e => e.ModuleId)
+            .IsRequired();
+
+        modelBuilder.Entity<SequenceItem>()
+            .HasOne(e => e.Option)
+            .WithMany(e => e.SequenceItems)
+            .HasForeignKey(e => e.OptionId)
+            .IsRequired();
+
+        base.OnModelCreating(modelBuilder);
+    }
+}

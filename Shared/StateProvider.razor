@@ -19,9 +19,13 @@
         DarkMode = darkMode;
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        DarkMode = await IsDarkMode();
+        if (firstRender)
+        {
+            DarkMode = await IsDarkMode();
+            StateHasChanged();
+        }
     }
 
     public async Task<bool> IsDarkMode()
