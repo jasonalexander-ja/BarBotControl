@@ -9,6 +9,8 @@ public class AppDbContext : DbContext
     public DbSet<Option> Options { get; set; }
     public DbSet<Sequence> Sequences { get; set; }
     public DbSet<SequenceItem> SequenceItem { get; set; }
+    public DbSet<ErrorType> ErrorTypes { get; set; }
+    public DbSet<SudoUser> SudoUsers { get; set; }
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -23,6 +25,11 @@ public class AppDbContext : DbContext
             .WithOne(e => e.Sequence)
             .HasForeignKey(e => e.SequenceId)
             .IsRequired();
+
+        modelBuilder.Entity<Sequence>()
+            .HasMany(e => e.ErrorTypes)
+            .WithOne(e => e.Sequence)
+            .HasForeignKey(e => e.SequenceId);
 
         modelBuilder.Entity<SequenceItem>()
             .HasOne(e => e.Module)

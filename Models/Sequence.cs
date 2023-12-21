@@ -6,4 +6,5 @@ public class Sequence
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public ICollection<SequenceItem> SequenceItems { get; set; } = new List<SequenceItem>();
+    public ICollection<ErrorType> ErrorTypes { get; set; } = new List<ErrorType>();
 }
