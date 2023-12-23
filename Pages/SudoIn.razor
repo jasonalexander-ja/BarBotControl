@@ -1,0 +1,144 @@
+﻿@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using BarBotControl.Exceptions.SudoUser
+@using BarBotControl.Config
+@using BarBotControl.Models
+
+@page "/sudoin"
+@inject ILocalStorageService LocalStorage
+@inject SudoUserService SudoUserService
+@inject SessionService SessionService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+
+
+<MudGrid Justify="Justify.Center">
+    <MudItem xs="12" sm="7">
+        <MudPaper Class="pa-4">
+            @if (!IsStartup)
+            {
+                <MudText Typo="Typo.h6">User Login</MudText>
+                <MudForm @ref="PwForm">
+                    <MudTextField 
+                        T="string" 
+                        Label="Username" 
+                        Required="true" 
+                        RequiredError="User name is required." 
+                        @bind-Value="UserName"
+                    />
+                    <MudTextField 
+                        T="string" 
+                        Label="Password" 
+                        InputType="InputType.Password"
+                        Required="true"
+                        RequiredError="Password is required." 
+                        @bind-Value="Password"
+                    />
+                </MudForm>
+
+                <div class="d-flex pt-4">
+                    <MudButton 
+                        Variant="Variant.Filled" 
+                        Color="Color.Primary"
+                        OnClick="() => LogIn()"
+                        DisableElevation="true" 
+                    >
+                        Log In
+                    </MudButton>
+                </div>
+            }
+            else
+            {
+                <MudText Typo="Typo.h6">Startup Login</MudText>
+                <MudForm @ref="StartupForm">
+                    <MudTextField 
+                        T="string" 
+                        Label="Startup Passcode" 
+                        InputType="InputType.Password"
+                        Required="true"
+                        RequiredError="Passcode is required." 
+                        @bind-Value="StartupPasscode"
+                    />
+                </MudForm>
+
+                <div class="d-flex pt-2">
+                    <MudButton 
+                        Variant="Variant.Filled" 
+                        Color="Color.Primary"
+                        OnClick="() => SatrtUpLogIn()"
+                        DisableElevation="true" 
+                    >
+                        Log In
+                    </MudButton>
+                </div>
+            }
+
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    MudForm PwForm { get; set; }
+    MudForm StartupForm { get; set; }
+
+    public string UserName { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+
+    public string StartupPasscode { get; set; } = string.Empty;
+
+
+    public bool IsStartup { get; set; }
+
+    public async Task LogIn()
+    {
+        await PwForm.Validate();
+        if (!PwForm.IsValid)
+        {
+            Snackbar.Add("Please ensure username & password is completed. ", Severity.Warning);
+            return;
+        }
+        await TryLogin(async () => await SudoUserService.SignUserIn(UserName, Password));
+    }
+
+    public async Task SatrtUpLogIn()
+    {
+        await StartupForm.Validate();
+        if (!StartupForm.IsValid)
+        {
+            Snackbar.Add("Please enter a passcode. ", Severity.Warning);
+            return;
+        }
+        await TryLogin(async () => await SudoUserService.StartupSignIn(StartupPasscode));
+    }
+
+    public async Task TryLogin(Func<Task<SudoSession>> loginCurriedFunc)
+    {
+        try
+        {
+            var session = await loginCurriedFunc.Invoke();
+            await LocalStorage.SetItemAsStringAsync(SessionKeys.SessionTokenKey, session.SessionKey);
+            await LocalStorage.SetItemAsStringAsync(SessionKeys.SessionUserNameKey, session.UserName);
+            await JS.InvokeVoidAsync("reload");
+        }
+        catch (SignInBaseException ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Warning);
+        }
+        catch (AppHasUsersException)
+        {
+            Snackbar.Add("Users have already been added to this app and startup login is not available. ", Severity.Warning);
+            StateHasChanged();
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Something went really wrong there, go yell at Jason. ", Severity.Error);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsStartup = await SudoUserService.CanStartupSignIn();
+
+        await base.OnInitializedAsync();
+    }
+}

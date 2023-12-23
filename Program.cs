@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Hosting.StaticWebAssets;
-using BarBotControl.Data;
 using MudBlazor.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
 using Blazored.LocalStorage;
+using BarBotControl.Data;
+using BarBotControl.Config;
+using BarBotControl.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +24,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         .EnableSensitiveDataLogging()
         .EnableDetailedErrors()
 );
+
+builder.Services.AddSingleton(
+    builder.Configuration.GetRequiredSection("SudoUserConfig")
+    .Get<SudoUserConfig>());
+builder.Services.AddSingleton<SessionService>();
+builder.Services.AddScoped<SudoUserDataService>();
+builder.Services.AddScoped<SudoUserService>();
 
 // Add services to the container.
 builder.Services.AddRazorPages();

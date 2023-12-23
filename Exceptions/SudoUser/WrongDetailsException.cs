@@ -1,6 +1,6 @@
 ﻿namespace BarBotControl.Exceptions.SudoUser;
 
-public class WrongDetailsException : Exception
+public class WrongDetailsException : SignInBaseException
 {
     public WrongDetailsException(string msg) : base(msg) { }
 }

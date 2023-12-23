@@ -1,7 +1,25 @@
-﻿
+﻿@using BarBotControl.Config
+
+@inject SessionService SessionService
+@inject ILocalStorageService LocalStorage
+@inject IJSRuntime JS
+
+
 <MudAppBar Color="Color.Primary" Elevation="0">
     <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
     <MudSpacer />
+    <SudoView>
+        <Authed>
+            <MudText Typo="Typo.subtitle1">@UserName</MudText>
+            <MudIconButton 
+                Icon="@Icons.Material.Filled.Logout"
+                aria-label="Dark Mode"
+                OnClick="@LogOut"
+                Color="Color.Secondary"
+            >
+            </MudIconButton>
+        </Authed>
+    </SudoView>
     @if (StateProvider.DarkMode)
     {
         <MudIconButton 
@@ -21,8 +39,6 @@
         >
         </MudIconButton>
     }
-    <MudIconButton Icon="@Icons.Custom.Brands.MudBlazor" Color="Color.Inherit" Href="https://mudblazor.com/" Target="_blank" />
-    <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/MudBlazor/MudBlazor/" Target="_blank" />
 </MudAppBar>
 
 @code {
@@ -33,5 +49,29 @@
     public Action DrawerToggle { get; set; } = () => { };
     [Parameter]
     public Func<Task> ToggleDarkMode { get; set; } = () => Task.CompletedTask;
+
+    public string UserName { get; set; } = string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        UserName = await LocalStorage.GetItemAsStringAsync(SessionKeys.SessionUserNameKey) ?? "";
+    }
+
+    public async Task LogOut()
+    {
+        string token = await LocalStorage.GetItemAsStringAsync(SessionKeys.SessionTokenKey) ?? "";
+        var isAuthed = SessionService.CheckSession(token);
+
+        if (!isAuthed)
+        {
+            await JS.InvokeVoidAsync("reload");
+            return;
+        }
+
+        SessionService.RemoveSession(token);
+        await LocalStorage.SetItemAsStringAsync(SessionKeys.SessionTokenKey, "");
+        await LocalStorage.SetItemAsStringAsync(SessionKeys.SessionUserNameKey, "");
+        await JS.InvokeVoidAsync("reload");
+    }
 
 }

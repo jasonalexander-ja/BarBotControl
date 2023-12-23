@@ -8,33 +8,30 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BarBotControl.Services;
 
-public class SudoUserAccessService
+public class SudoUserDataService
 {
     private readonly AppDbContext Context;
-    private readonly SudoUserConfig Config;
 
     private const int keySize = 64;
     private const int iterations = 350000;
     private HashAlgorithmName hashAlgorithm = HashAlgorithmName.SHA512;
 
-    public SudoUserAccessService(AppDbContext context, SudoUserConfig config)
+    public SudoUserDataService(AppDbContext context)
     {
         Context = context;
-        Config = config;
     }
 
-    public async Task<SudoUser> CreateUser(string userName, string password)
+    public async Task<SudoUser> CreateUser(string userName, string passwordHash, byte[] salt)
     {
         bool exists = await Context.SudoUsers.AnyAsync(u => u.UserName == userName);
         if (exists)
         {
             throw new SudoUserExistsException("Already user with this name. ");
         }
-        var hashed = HashPasword(password, out var salt);
         SudoUser user = new SudoUser
         {
             UserName = userName,
-            PasswordHash = hashed,
+            PasswordHash = passwordHash,
             PasswordSalt = salt
         };
         await Context.SudoUsers.AddAsync(user);
@@ -42,17 +39,10 @@ public class SudoUserAccessService
         return user;
     }
 
-    public async Task<bool> CheckSignIn(string userName, string password)
-    {
-        var sudoUser = await GetUser(userName);
-        return VerifyPassword(password, sudoUser.PasswordHash, sudoUser.PasswordSalt);
-    }
-
-    public async Task<SudoUser> UpdatePassword(string userName, string password)
+    public async Task<SudoUser> UpdatePassword(string userName, string passwordHash, byte[] salt)
     {
         var user = await GetUser(userName);
-        var hashed = HashPasword(password, out var salt);
-        user.PasswordHash = hashed;
+        user.PasswordHash = passwordHash;
         user.PasswordSalt = salt;
         await Context.SaveChangesAsync();
         return user;
@@ -60,7 +50,7 @@ public class SudoUserAccessService
 
     public async Task<bool> CanStartupSignIn()
     {
-        return await Context.SudoUsers.AnyAsync();
+        return !(await Context.SudoUsers.AnyAsync());
     }
 
     public async Task<SudoUser> GetUser(string userName)
@@ -90,23 +80,5 @@ public class SudoUserAccessService
         return await Context.SudoUsers
             .Where(u => u.UserName.ToLower().Contains(userName.ToLower()))
             .ToListAsync();
-    }
-
-    private string HashPasword(string password, out byte[] salt)
-    {
-        salt = RandomNumberGenerator.GetBytes(keySize);
-        var hash = Rfc2898DeriveBytes.Pbkdf2(
-            Encoding.UTF8.GetBytes(password),
-            salt,
-            iterations,
-            hashAlgorithm,
-            keySize);
-        return Convert.ToHexString(hash);
-    }
-
-    private bool VerifyPassword(string password, string hash, byte[] salt)
-    {
-        var hashToCompare = Rfc2898DeriveBytes.Pbkdf2(password, salt, iterations, hashAlgorithm, keySize);
-        return CryptographicOperations.FixedTimeEquals(hashToCompare, Convert.FromHexString(hash));
     }
 }

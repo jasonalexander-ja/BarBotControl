@@ -1,0 +1,36 @@
+﻿@using BarBotControl.Config
+
+@inject SessionService SessionService
+@inject ILocalStorageService LocalStorage
+
+
+@if (IsAuthed)
+{
+    @Authed
+}
+else
+{
+    @UnAuthed
+}
+
+
+@code {
+    [Parameter]
+    public RenderFragment? Authed { get; set; }
+
+    [Parameter]
+    public RenderFragment? UnAuthed { get; set; }
+
+    public bool IsAuthed { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        string token = await LocalStorage.GetItemAsStringAsync(SessionKeys.SessionTokenKey) ?? "";
+
+        if (string.IsNullOrEmpty(token))
+            return;
+
+        IsAuthed = SessionService.CheckSession(token);
+        await base.OnAfterRenderAsync(firstRender);
+    }
+}

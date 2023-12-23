@@ -29,6 +29,9 @@
         function isDarkMode() {
             return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
         }
+        function reload() {
+            location.reload();
+        }
     </script>
     <script src="_framework/blazor.server.js"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>

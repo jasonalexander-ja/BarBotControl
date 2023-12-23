@@ -1,4 +1,5 @@
-﻿using BarBotControl.Config;
+﻿using BarBotControl.Exceptions.SudoUser;
+using BarBotControl.Config;
 
 namespace BarBotControl.Services;
 
@@ -13,11 +14,12 @@ public class SessionService
         Config = config;
     }
 
-    public string AddSession()
+    public string AddSession(out DateTime expirey)
     {
         string id = Guid.NewGuid().ToString();
         DateTime timeout = DateTime.Now.AddMinutes(Config.SessionMinutes);
         Sessions.Add(id, timeout);
+        expirey = timeout;
         return id;
     }
 
@@ -34,9 +36,9 @@ public class SessionService
 
         return true;
     }
-}
 
-class TimedOutException : Exception
-{
-    public TimedOutException(string msg) : base(msg) { }
+    public void RemoveSession(string id) 
+    { 
+        Sessions.Remove(id); 
+    }
 }
