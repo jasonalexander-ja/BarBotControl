@@ -25,12 +25,11 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (!firstRender) return;
         string token = await LocalStorage.GetItemAsStringAsync(SessionKeys.SessionTokenKey) ?? "";
 
-        if (string.IsNullOrEmpty(token))
-            return;
-
         IsAuthed = SessionService.CheckSession(token);
+        StateHasChanged();
         await base.OnAfterRenderAsync(firstRender);
     }
 }

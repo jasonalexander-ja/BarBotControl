@@ -1,12 +1,36 @@
-﻿<MudNavMenu>
-    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
-    <MudNavLink Href="counter" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Add">Counter</MudNavLink>
-    <SudoView>
-        <Authed>
+﻿@using BarBotControl.Config
 
-        </Authed>
-        <UnAuthed>
-            <MudNavLink Href="sudoin" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Login">Sudo In</MudNavLink>
-        </UnAuthed>
-    </SudoView>
-</MudNavMenu>
+@inject SessionService SessionService
+@inject ILocalStorageService LocalStorage
+
+
+@if (IsAuthed)
+{
+    <MudNavMenu>
+        <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+        <MudNavLink Href="counter" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Add">Counter</MudNavLink>
+        <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.SupervisedUserCircle">Users</MudNavLink>
+    </MudNavMenu>
+}
+else 
+{
+    <MudNavMenu>
+        <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+        <MudNavLink Href="counter" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Add">Counter</MudNavLink>
+        <MudNavLink Href="sudoin" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Login">Sudo In</MudNavLink>
+    </MudNavMenu>
+}
+
+@code {
+    public bool IsAuthed { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        string token = await LocalStorage.GetItemAsStringAsync(SessionKeys.SessionTokenKey) ?? "";
+
+        IsAuthed = SessionService.CheckSession(token);
+        StateHasChanged();
+        await base.OnAfterRenderAsync(firstRender);
+    }
+}
