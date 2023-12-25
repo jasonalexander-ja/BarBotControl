@@ -4,7 +4,7 @@
 @using BarBotControl.Config
 @using BarBotControl.Models
 
-@page "/sudoin"
+@page "/SudoIn"
 @inject ILocalStorageService LocalStorage
 @inject SudoUserService SudoUserService
 @inject SessionService SessionService
@@ -60,8 +60,7 @@
                         @bind-Value="StartupPasscode"
                     />
                 </MudForm>
-
-                <div class="d-flex pt-2">
+                <div class="d-flex pt-4">
                     <MudButton 
                         Variant="Variant.Filled" 
                         Color="Color.Primary"
@@ -72,7 +71,6 @@
                     </MudButton>
                 </div>
             }
-
         </MudPaper>
     </MudItem>
 </MudGrid>
@@ -86,8 +84,8 @@
 
     public string StartupPasscode { get; set; } = string.Empty;
 
-
     public bool IsStartup { get; set; }
+
 
     public async Task LogIn()
     {

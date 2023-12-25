@@ -4,10 +4,13 @@ using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using MudBlazor.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Threading;
+using System.Threading.Channels;
 using Blazored.LocalStorage;
 using BarBotControl.Data;
 using BarBotControl.Config;
 using BarBotControl.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,8 +32,23 @@ builder.Services.AddSingleton(
     builder.Configuration.GetRequiredSection("SudoUserConfig")
     .Get<SudoUserConfig>());
 builder.Services.AddSingleton<SessionService>();
+
 builder.Services.AddScoped<SudoUserDataService>();
 builder.Services.AddScoped<SudoUserService>();
+
+builder.Services.AddScoped<ModuleDataService>();
+builder.Services.AddScoped<ModuleService>();
+
+
+
+
+var concurrentService = new ConcurrentService();
+
+builder.Services.AddSingleton(concurrentService);
+
+
+
+
 
 // Add services to the container.
 builder.Services.AddRazorPages();

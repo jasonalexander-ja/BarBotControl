@@ -21,7 +21,7 @@ public class AuthedPageBase : ComponentBase
         var isAuthed = SessionService.CheckSession(token);
         if (!isAuthed)
         {
-            Navigation.NavigateTo("sudoin");
+            Navigation.NavigateTo("SudoIn");
             return;
         }
 

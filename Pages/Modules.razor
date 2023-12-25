@@ -1,18 +1,17 @@
-@using BarBotControl.Exceptions.SudoUser
+﻿@using BarBotControl.Exceptions.SudoUser
 @using BarBotControl.Config
 
 @inherits AuthedPageBase
-@page "/Users"
+@page "/Modules"
 
-@inject SudoUserService UserService
-@inject SessionService SessionService
+@inject ModuleService ModuleService
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
 
 
 <MudGrid Class="py-4" Spacing="0">
     <MudItem sm="6" xs="12" Class="d-flex align-center">
-        <MudText Typo="Typo.h6">Sudo Users</MudText>
+        <MudText Typo="Typo.h6">Modules</MudText>
     </MudItem>
     <MudItem sm="6" xs="12">
         <MudTextField 
@@ -31,27 +30,33 @@
     Items="@Elements" 
     Hover="true" 
     MultiSelection="true"
-    Filter="new Func<SudoUserModel, bool>(Filter)" 
+    Filter="new Func<ModuleModel, bool>(Filter)" 
     @bind-SelectedItems="SelectedItems"
 >
     <HeaderContent>
-        <MudTh>User Name</MudTh>
+        <MudTh>Id</MudTh>
+        <MudTh>Name</MudTh>
+        <MudTh>Channel</MudTh>
+        <MudTh>Active</MudTh>
         <MudTh>Actions</MudTh>
     </HeaderContent>
     <RowTemplate>
-        <MudTd DataLabel="User Name">@context.UserName</MudTd>
+        <MudTd DataLabel="Id">@context.ModuleId</MudTd>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Channel">@context.Channel</MudTd>
+        <MudTd DataLabel="Active">@(context.IsActive ? "Active" : "Inactive")</MudTd>
         <MudTd DataLabel="Actions">
             <MudIconButton 
                 Icon="@Icons.Material.Filled.Edit"
                 aria-label="Edit"
-                OnClick=@(() => Navigation.NavigateTo($"/User/{context.UserName}"))
+                OnClick=@(() => Navigation.NavigateTo($"/Module/{context.ModuleId}"))
                 Size="Size.Small"
                 Color="Color.Primary"
             />
             <MudIconButton 
                 Icon="@Icons.Material.Filled.Delete"
                 aria-label="Delete"
-                OnClick=@(() => DeleteUser(context.UserName))
+                OnClick=@(() => DeleteModule(context))
                 Size="Size.Small"
                 Color="Color.Secondary"
             />
@@ -73,12 +78,12 @@
         <MudButton 
             Variant="Variant.Filled" 
             Color="Color.Primary" 
-            OnClick=@(() => Navigation.NavigateTo("/UserNew")) 
+            OnClick=@(() => Navigation.NavigateTo("/ModuleNew")) 
             DisableElevation="true" 
             FullWidth="true"
-            aria-label="New user"
+            aria-label="New module"
         >
-            New User
+            New Module
         </MudButton>
     </MudItem>
 
@@ -88,50 +93,56 @@
             <MudButton 
                 Variant="Variant.Filled" 
                 Color="Color.Secondary"
-                OnClick="() => DeleteUsers()"
+                OnClick="() => DeleteModules()"
                 DisableElevation="true" 
                 FullWidth="true"
-                aria-label="Delete user"
+                aria-label="Delete modules"
             >
-                Delete Users
+                Delete Modules
             </MudButton>
         </MudItem>
     }
 </MudGrid>
 
 
-@code {
-    private string SearchString { get; set; }  = "";
 
-    private HashSet<SudoUserModel> SelectedItems = new HashSet<SudoUserModel>();
+
+@code {
+    public string SearchString { get; set; } = "";
+
+    public HashSet<ModuleModel> SelectedItems = new HashSet<ModuleModel>();
 
     public bool Loading { get; set; } = true;
 
-    private IEnumerable<SudoUserModel> Elements = new List<SudoUserModel>();
+    public IEnumerable<ModuleModel> Elements = new List<ModuleModel>();
 
+    public bool Filter(ModuleModel element) => FilterFunc(element, SearchString);
 
-    private bool Filter(SudoUserModel element) => FilterFunc(element, SearchString);
-
-    private bool FilterFunc(SudoUserModel element, string searchString)
+    public bool FilterFunc(ModuleModel element, string searchString)
     {
+        string active = element.IsActive ? "Active" : "Inactive";
         if (string.IsNullOrWhiteSpace(searchString))
             return true;
-        if (element.UserName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+        if (element.ModuleId.ToString().Contains(searchString, StringComparison.OrdinalIgnoreCase))
             return true;
-        if (element.UserName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+        if (element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.Channel.ToString().Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (active.Contains(searchString, StringComparison.OrdinalIgnoreCase))
             return true;
         return false;
     }
 
-    public async Task DeleteUser(string userName)
+    public async Task DeleteModule(ModuleModel module)
     {
         try
         {
-            await UserService.DeleteUser(userName);
+            await ModuleService.DeleteModule(module);
         }
         catch (SudoUserNotFoundException)
         {
-            Snackbar.Add($"Hmmm, strange, couldn't find a user by the name {userName}", Severity.Error);
+            Snackbar.Add($"Hmmm, strange, couldn't find a module with the ID {module.ModuleId}", Severity.Error);
         }
         catch
         {
@@ -139,11 +150,11 @@
         }
     }
 
-    public async Task DeleteUsers()
+    public async Task DeleteModules()
     {
         try
         {
-            await UserService.DeleteUsers(SelectedItems);
+            await ModuleService.DeleteModules(SelectedItems);
         }
         catch (SudoUserNotFoundException ex)
         {
@@ -159,7 +170,7 @@
     {
         try
         {
-            Elements = await UserService.GetUsers();
+            Elements = await ModuleService.GetModules();
         }
         catch
         {

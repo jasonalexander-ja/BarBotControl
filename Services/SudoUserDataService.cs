@@ -5,16 +5,13 @@ using BarBotControl.Models;
 using BarBotControl.Exceptions.SudoUser;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using BarBotControl.Exceptions;
 
 namespace BarBotControl.Services;
 
 public class SudoUserDataService
 {
     private readonly AppDbContext Context;
-
-    private const int keySize = 64;
-    private const int iterations = 350000;
-    private HashAlgorithmName hashAlgorithm = HashAlgorithmName.SHA512;
 
     public SudoUserDataService(AppDbContext context)
     {
@@ -58,7 +55,7 @@ public class SudoUserDataService
         var result = await Context.SudoUsers.FirstOrDefaultAsync(u => u.UserName == userName);
         if (result == null)
         {
-            throw new SudoUserNotFoundException($"No user by {userName}. ");
+            throw new ObjectNotFoundException($"No user by {userName}. ");
         }
         return result;
     }
@@ -75,10 +72,13 @@ public class SudoUserDataService
         await Context.SaveChangesAsync();
     }
 
-    public async Task<List<SudoUser>> SearchByUserName(string userName)
+    public async Task DeleteUsers(IEnumerable<string> userNames)
     {
-        return await Context.SudoUsers
-            .Where(u => u.UserName.ToLower().Contains(userName.ToLower()))
-            .ToListAsync();
+        foreach (var userName in userNames)
+        {
+            var user = await GetUser(userName);
+            Context.SudoUsers.Remove(user);
+        }
+        await Context.SaveChangesAsync();
     }
 }

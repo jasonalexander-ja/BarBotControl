@@ -1,7 +1,35 @@
-﻿@page "/"
+﻿@using System.Threading.Channels
+
+@page "/"
+@inject ConcurrentService Service
 
 <PageTitle>Index</PageTitle>
 
 <MudText Typo="Typo.h3" GutterBottom="true">Hello, world!</MudText>
 <MudText Class="mb-8">Welcome to your new app, powered by MudBlazor!</MudText>
 <MudAlert Severity="Severity.Normal">You can find documentation and examples on our website here: <MudLink Href="https://mudblazor.com" Typo="Typo.body2" Color="Color.Inherit"><b>www.mudblazor.com</b></MudLink></MudAlert>
+<MudText Class="mb-8">@Message</MudText>
+<MudButton 
+    Variant="Variant.Filled" 
+    aria-label="Save edit"
+    Color="Color.Primary"
+    DisableElevation="true" 
+    OnClick="() => SendMsg()"
+>
+    Send Message
+</MudButton>
+
+
+@code {
+    public string Message { get; set; } = string.Empty;
+
+
+    public async Task SendMsg()
+    {
+        var response = await Service.SendMessageAwaitResponse("Hello world");
+        Message = response.Message;
+        StateHasChanged();
+    }
+
+}
+

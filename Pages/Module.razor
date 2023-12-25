@@ -1,0 +1,154 @@
+﻿@using BarBotControl.Exceptions
+@inherits AuthedPageBase
+@page "/Module/{ModuleId}"
+
+@inject ModuleService ModuleService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+
+<EditForm Model="@Model" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator/>
+    <MudGrid Justify="Justify.Center">
+        <MudItem xs="12" sm="7">
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" Class="d-flex align-center">
+                        <MudIconButton 
+                            Icon="@Icons.Material.Filled.ArrowBack"
+                            aria-label="Go Back"
+                            OnClick=@(() => Navigation.NavigateTo("/Modules"))
+                            Size="Size.Small"
+                            Color="Color.Secondary"
+                        />
+                        Edit Module
+                    </MudText>
+                    <MudGrid Spacing="1">
+                        <MudItem md="6" xs="12">
+                            @if (Loading)
+                            {
+                                <MudSkeleton />
+                                <MudSkeleton />
+                            }
+                            else 
+                            {
+                                <MudTextField 
+                                    Label="Name"
+                                    @bind-Value="Model.Name" 
+                                    For="@(() => Model.Name)"
+                                />
+                            }
+                        </MudItem>
+                        <MudItem md="6" xs="12">
+                            @if (Loading)
+                            {
+                                <MudSkeleton />
+                                <MudSkeleton />
+                            }
+                            else 
+                            {
+                                <MudNumericField  
+                                    Label="Channel"
+                                    @bind-Value="Model.Channel" 
+                                    For="@(() => Model.Channel)"
+                                />
+                            }
+                        </MudItem>
+                        <MudItem md="6" xs="12">
+                            @if (Loading)
+                            {
+                                <MudSkeleton />
+                                <MudSkeleton />
+                            }
+                            else
+                            {
+                                <MudCheckBox 
+                                    @bind-Value="Model.IsActive"
+                                    Label="Is Active"
+                                    Size="Size.Small"
+                                    Color="Color.Secondary"
+                                    For=@(() => Model.IsActive)
+                                />
+                            }
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
+                <MudCardActions Class="d-flex px-4 pb-4 gap-2">
+                    <MudButton 
+                        Variant="Variant.Filled" 
+                        aria-label="Save edit"
+                        Color="Color.Primary"
+                        ButtonType="ButtonType.Submit"
+                        DisableElevation="true" 
+                    >
+                        Save
+                    </MudButton>
+                    <MudButton 
+                        Variant="Variant.Filled" 
+                        Color="Color.Secondary"
+                        ButtonType="ButtonType.Submit"
+                        aria-label="Go Back"
+                        OnClick=@(() => Navigation.NavigateTo("/Modules"))
+                        DisableElevation="true" 
+                    >
+                        Back 
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</EditForm>
+
+
+@code {
+    public ModuleModel Model { get; set; } = new ModuleModel();
+    [Parameter]
+    public string ModuleId { get; set; } = string.Empty;
+    public bool Loading { get; set; } = true;
+
+    protected override async Task GetData()
+    {
+        if (!int.TryParse(ModuleId, out var moduleId))
+        {
+            Snackbar.Add("Incorect module Id. ", Severity.Warning);
+            Navigation.NavigateTo("/Modules");
+        }
+        try
+        {
+            Model = await ModuleService.GetModule(moduleId);
+        }
+        catch (ObjectNotFoundException)
+        {
+            Snackbar.Add("That's weird, we can't find this module. ", Severity.Error);
+            Navigation.NavigateTo("/Modules");
+        }
+        catch
+        {
+            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+        }
+        finally
+        {
+            Loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnValidSubmit(EditContext context)
+    {
+        try
+        {
+            await ModuleService.UpdateModule(Model);
+            Snackbar.Add("Successfully updated module. ", Severity.Success);
+            Navigation.NavigateTo($"/Modules");
+        }
+        catch (ObjectNotFoundException)
+        {
+            Snackbar.Add("Strange, looks like this module has been deleted. ", Severity.Error);
+            Navigation.NavigateTo($"/Modules");
+        }
+        catch
+        {
+            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+        }
+    }
+}

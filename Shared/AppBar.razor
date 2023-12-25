@@ -20,25 +20,15 @@
             </MudIconButton>
         </Authed>
     </SudoView>
-    @if (StateProvider.DarkMode)
-    {
-        <MudIconButton 
-            Icon="@Icons.Material.Filled.LightMode" 
-            aria-label="Light Mode" 
-            OnClick="@ToggleDarkMode"
-            Color="Color.Secondary"
-        >
-        </MudIconButton>
-    } else
-    {
-        <MudIconButton 
-            Icon="@Icons.Material.Outlined.LightMode"
-            aria-label="Dark Mode"
-            OnClick="@ToggleDarkMode"
-            Color="Color.Secondary"
-        >
-        </MudIconButton>
-    }
+    <MudIconButton 
+        Icon=@(StateProvider.DarkMode 
+                ? Icons.Material.Filled.LightMode 
+                : Icons.Material.Outlined.LightMode)
+        aria-label="Light Mode" 
+        OnClick="@ToggleDarkMode"
+        Color="Color.Secondary"
+    >
+    </MudIconButton>
 </MudAppBar>
 
 @code {

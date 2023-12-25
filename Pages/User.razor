@@ -1,0 +1,151 @@
+﻿@using BarBotControl.Exceptions.SudoUser
+@inherits AuthedPageBase
+@page "/User/{UserName}"
+
+@inject SudoUserService UserService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<MudGrid Justify="Justify.Center">
+    <MudItem xs="12" sm="7">
+        <MudPaper Class="pa-4">
+            @if (Loading)
+            {
+                <MudSkeleton Height="50px" />
+            }
+            else
+            {
+                <MudText Typo="Typo.h6" Class="d-flex align-center">
+                    <MudIconButton 
+                        Icon="@Icons.Material.Filled.ArrowBack"
+                        aria-label="Go Back"
+                        OnClick=@(() => Navigation.NavigateTo("/Users"))
+                        Size="Size.Small"
+                        Color="Color.Secondary"
+                    />
+                    @UserName
+                </MudText>
+            }
+            <MudForm @ref="PwForm">
+                @if (Loading)
+                {
+                    <MudSkeleton />
+                    <MudSkeleton />
+                }
+                else
+                {
+                    <MudTextField 
+                        T="string" 
+                        Label="Password" 
+                        InputType="InputType.Password"
+                        Required="true"
+                        RequiredError="Password is required." 
+                        @bind-Value="Password"
+                    />
+                }
+            </MudForm>
+
+            <div class="d-flex pt-4 gap-2">
+                <MudButton 
+                    Variant="Variant.Filled" 
+                    Color="Color.Primary"
+                    OnClick="() => ChangePassword()"
+                    DisableElevation="true" 
+                >
+                    Change Password
+                </MudButton>
+                <MudButton 
+                    Variant="Variant.Filled"
+                    Color="Color.Secondary"
+                    OnClick="() => DeleteUser()"
+                    DisableElevation="true" 
+                >
+                    Delete
+                </MudButton>
+            </div>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+
+
+@code {
+    MudForm PwForm { get; set; }
+
+    public bool Loading { get; set; } = true;
+
+    [Parameter]
+    public string UserName { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+
+    public SudoUserModel SudoUser { get; set; } = new SudoUserModel();
+
+
+    public async Task ChangePassword()
+    {
+        await PwForm.Validate();
+        if (!PwForm.IsValid)
+        {
+            Snackbar.Add("Please specify a password. ", Severity.Warning);
+            return;
+        }
+        try
+        {
+            await UserService.UpdatePassword(UserName, Password);
+            Snackbar.Add("Updated password. ", Severity.Success);
+            Password = "";
+            StateHasChanged();
+        }
+        catch (SudoUserNotFoundException)
+        {
+            Snackbar.Add("That's weird, we can't find this user. ", Severity.Error);
+            Navigation.NavigateTo("/Users");
+        }
+        catch
+        {
+            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+        }
+    }
+
+    public async Task DeleteUser()
+    {
+        try
+        {
+            await UserService.DeleteUser(UserName);
+            Snackbar.Add("Successfully deleted user. ", Severity.Success);
+            Navigation.NavigateTo("Users");
+        }
+        catch (SudoUserNotFoundException)
+        {
+            Snackbar.Add("That's weird, we can't find this user. ", Severity.Error);
+            Navigation.NavigateTo("Users");
+        }
+        catch
+        {
+            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+        }
+    }
+
+    protected override async Task GetData()
+    {
+        try
+        {
+            SudoUser = await UserService.GetUser(UserName);
+        }
+        catch (SudoUserNotFoundException)
+        {
+            Snackbar.Add("No such user by that name. ", Severity.Warning);
+            Navigation.NavigateTo("/Users");
+            return;
+        }
+        catch
+        {
+            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+        }
+        finally
+        {
+            Loading = false;
+            StateHasChanged();
+        }
+    }
+}

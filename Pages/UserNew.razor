@@ -1,0 +1,97 @@
+﻿@using BarBotControl.Exceptions.SudoUser
+@inherits AuthedPageBase
+@page "/UserNew"
+
+@inject SudoUserService UserService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<MudGrid Justify="Justify.Center">
+    <MudItem xs="12" sm="7">
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6" Class="d-flex align-center">
+                    <MudIconButton 
+                        Icon="@Icons.Material.Filled.ArrowBack"
+                        aria-label="Go Back"
+                        OnClick=@(() => Navigation.NavigateTo("/Users"))
+                        Size="Size.Small"
+                        Color="Color.Secondary"
+                    />
+                    New User
+                </MudText>
+                <MudForm @ref="PwForm">
+                    <MudTextField 
+                        T="string" 
+                        Label="Username" 
+                        Required="true" 
+                        RequiredError="User name is required." 
+                        @bind-Value="UserName"
+                    />
+                    <MudTextField 
+                        T="string" 
+                        Label="Password" 
+                        InputType="InputType.Password"
+                        Required="true"
+                        RequiredError="Password is required." 
+                        @bind-Value="Password"
+                    />
+                </MudForm>
+            </MudCardContent>
+
+            <MudCardActions Class="d-flex px-4 pb-4 gap-2">
+                <MudButton 
+                    Variant="Variant.Filled" 
+                    Color="Color.Primary"
+                    OnClick="() => Save()"
+                    DisableElevation="true" 
+                    aria-label="Create user"
+                >
+                    Create
+                </MudButton>
+                <MudButton 
+                    Variant="Variant.Filled" 
+                    Color="Color.Secondary"
+                    OnClick=@(() => Navigation.NavigateTo("/Users"))
+                    DisableElevation="true" 
+                    aria-label="Go back"
+                >
+                    Back 
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+
+@code {
+    MudForm PwForm { get; set; }
+
+    public string UserName { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+
+
+    public async Task Save()
+    {
+        await PwForm.Validate();
+        if (!PwForm.IsValid)
+        {
+            Snackbar.Add("Please specify a username + password. ", Severity.Warning);
+            return;
+        }
+        try
+        {
+            var newUser = await UserService.AddUser(UserName, Password);
+            Snackbar.Add("User created. ", Severity.Success);
+            Navigation.NavigateTo("/Users");
+        }
+        catch (SudoUserExistsException)
+        {
+            Snackbar.Add("There is already a user by this name.  ", Severity.Error);
+        }
+        catch
+        {
+            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+        }
+    }
+}

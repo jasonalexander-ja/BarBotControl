@@ -14,6 +14,10 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<SudoUser>()
+            .HasIndex(u => u.UserName)
+            .IsUnique();
+
         modelBuilder.Entity<Module>()
             .HasMany(e => e.Options)
             .WithOne(e => e.Module)
