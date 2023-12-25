@@ -50,25 +50,6 @@ public class ConcurrentService : IAsyncDisposable
 }
 
 
-public class SenderService
-{
-    public Channel<ResponseMsg> ResponseChannel { get; set; }
-    public ChannelWriter<RequestMsg> QueueWriter { get; set; }
-
-    public SenderService(ChannelWriter<RequestMsg> queueWriter)
-    {
-        QueueWriter = queueWriter;
-        ResponseChannel = Channel.CreateUnbounded<ResponseMsg>();
-    }
-
-    public async Task<ResponseMsg> SendMessageAwaitResponse(string message)
-    {
-        await QueueWriter.WriteAsync(new RequestMsg(message, ResponseChannel.Writer));
-        return await ResponseChannel.Reader.ReadAsync();
-    }
-}
-
-
 public class RequestMsg
 {
     public bool Shutdown { get; set; }
