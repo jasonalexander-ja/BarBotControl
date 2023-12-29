@@ -1,0 +1,145 @@
+﻿@inherits AuthedPageBase
+@page "/Module/{ModuleIdStr}/ErrorTypeNew"
+
+@inject ErrorTypeService ErrorTypeService
+@inject SequenceService SequenceService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+
+<MudGrid Class="pb-2" Spacing="0" Justify="Justify.Center">
+    <MudItem xs="12" sm="7">
+        <MudText Typo="Typo.h6" Class="d-flex align-center px-1">
+            <MudIconButton 
+                Icon="@Icons.Material.Filled.ArrowBack"
+                aria-label="Go Back"
+                OnClick=@(() => Navigation.NavigateTo($"/Module/{ModuleIdStr}"))
+                Size="Size.Medium"
+                Color="Color.Secondary"
+            />
+            New Error Type
+        </MudText>
+    </MudItem>
+</MudGrid>
+
+<MudForm @ref="Form">
+    <EditForm Model="@Model" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator/>
+        <MudGrid Justify="Justify.Center">
+            <MudItem xs="12" sm="7">
+                <MudCard>
+                    <MudCardContent>
+                        <MudGrid Spacing="1">
+                            <MudItem md="6" xs="12">
+                                <MudTextField 
+                                    Label="Error Message"
+                                    @bind-Value="Model.ErrorMessage" 
+                                    For="@(() => Model.ErrorMessage)"
+                                    Variant="Variant.Filled"
+                                />
+                            </MudItem>
+                            <MudItem md="6" xs="12">
+                                <MudCheckBox 
+                                    @bind-Value="Model.Recoverable"
+                                    Label="Is Active"
+                                    Size="Size.Small"
+                                    Color="Color.Secondary"
+                                    For=@(() => Model.Recoverable)
+                                />
+                            </MudItem>
+                        </MudGrid>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+        <MudGrid Justify="Justify.Center" Class="pt-2">
+            <MudItem xs="12" sm="7">
+                <MudGrid Justify="Justify.FlexStart" Spacing="1">
+                    <MudItem md="4" sm="6" xs="12">
+                        <MudButton 
+                            Variant="Variant.Filled" 
+                            aria-label="Save edit"
+                            Color="Color.Primary"
+                            ButtonType="ButtonType.Submit"
+                            DisableElevation="true" 
+                            FullWidth="true"
+                        >
+                            Save
+                        </MudButton>
+                    </MudItem>
+                    <MudItem md="4" sm="6" xs="12">
+                        <MudButton 
+                            Variant="Variant.Filled" 
+                            Color="Color.Secondary"
+                            aria-label="Go Back"
+                            OnClick=@(() => Navigation.NavigateTo($"/Module/{ModuleIdStr}"))
+                            DisableElevation="true" 
+                            FullWidth="true"
+                        >
+                            Back 
+                        </MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudItem>
+        </MudGrid>
+    </EditForm>
+</MudForm>
+
+
+
+@code {
+    public MudForm Form { get; set; }
+
+    public ErrorTypeModel Model { get; set; } = new ErrorTypeModel();
+
+    public List<SequenceModel> Sequences { get; set; } = new List<SequenceModel>();
+
+    [Parameter]
+    public string ModuleIdStr { get; set; } = string.Empty;
+    public int ModuleId { get; set; }
+
+    private async Task OnValidSubmit(EditContext context)
+    {
+        await Form.Validate();
+        if (!Form.IsValid)
+        {
+            Snackbar.Add("Ensure all fields are correctly filled out. ", Severity.Warning);
+            return;
+        }
+        try
+        {
+            Model.ModuleId = ModuleId;
+            await ErrorTypeService.AddErrorType(Model);
+            Snackbar.Add("Successfully saved error type. ", Severity.Success);
+            Navigation.NavigateTo($"/Module/{ModuleId}");
+        }
+        catch (ObjectNotFoundException)
+        {
+            Snackbar.Add("Strange, looks like this error type has been deleted. ", Severity.Error);
+            Navigation.NavigateTo($"/Module/{ModuleId}");
+        }
+        catch
+        {
+            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+        }
+    }
+
+    protected override async Task GetData()
+    {
+        if (!int.TryParse(ModuleIdStr, out var moduleId))
+        {
+            Snackbar.Add("Incorect module Id. ", Severity.Warning);
+            Navigation.NavigateTo("/Modules");
+            return;
+        }
+        ModuleId = moduleId;
+        try
+        {
+            Sequences = await SequenceService.GetSequences();
+        }
+        catch
+        {
+            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+        }
+    }
+}
