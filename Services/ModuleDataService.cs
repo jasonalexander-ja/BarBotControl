@@ -7,6 +7,7 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using System;
 
+
 namespace BarBotControl.Services;
 
 public class ModuleDataService
@@ -35,6 +36,19 @@ public class ModuleDataService
     {
         var result = await Context.Modules.FirstOrDefaultAsync(u => u.ModuleId == id);
         if (result == null) 
+        {
+            throw new ObjectNotFoundException($"Can't find module with ID {id}");
+        }
+        return result;
+    }
+
+    public async Task<Module> GetModuleWithRelatedData(int id)
+    {
+        var result = await Context.Modules
+            .Include(m => m.Options)
+            .Include(m => m.ErrorTypes)
+            .FirstOrDefaultAsync(u => u.ModuleId == id);
+        if (result == null)
         {
             throw new ObjectNotFoundException($"Can't find module with ID {id}");
         }

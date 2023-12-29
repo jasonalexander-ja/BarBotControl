@@ -1,8 +1,7 @@
-﻿@using BarBotControl.Exceptions.SudoUser
-@inherits AuthedPageBase
-@page "/User/{UserName}"
+﻿@inherits AuthedPageBase
+@page "/Module/{ModuleIdStr}/Option/{OptIdStr}"
 
-@inject SudoUserService UserService
+@inject OptionService OptionService
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
 
@@ -13,24 +12,24 @@
             <MudIconButton 
                 Icon="@Icons.Material.Filled.ArrowBack"
                 aria-label="Go Back"
-                OnClick=@(() => Navigation.NavigateTo("/Users"))
+                OnClick=@(() => Navigation.NavigateTo($"/Module/{ModuleIdStr}"))
                 Size="Size.Medium"
                 Color="Color.Secondary"
             />
-            Edit User
+            Edit Option
         </MudText>
     </MudItem>
 </MudGrid>
 
 <MudForm @ref="Form">
-    <EditForm Model="@Password" OnValidSubmit="OnValidSubmit">
+    <EditForm Model="@Model" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator/>
         <MudGrid Justify="Justify.Center">
             <MudItem xs="12" sm="7">
                 <MudCard>
                     <MudCardContent>
                         <MudGrid Spacing="1">
                             <MudItem md="6" xs="12">
-
                                 @if (Loading)
                                 {
                                     <MudSkeleton />
@@ -39,18 +38,30 @@
                                 else
                                 {
                                     <MudTextField 
-                                        T="string" 
-                                        Label="User Name" 
-                                        Required="true"
-                                        ReadOnly="true"
-                                        @bind-Value="UserName"
+                                        Label="Name"
+                                        @bind-Value="Model.Name" 
+                                        For="@(() => Model.Name)"
                                         Variant="Variant.Filled"
                                     />
                                 }
                             </MudItem>
                             <MudItem md="6" xs="12">
-
-
+                                @if (Loading)
+                                {
+                                    <MudSkeleton />
+                                    <MudSkeleton />
+                                }
+                                else 
+                                {
+                                    <MudNumericField  
+                                        Label="Value"
+                                        @bind-Value="Model.OptionValue"
+                                        For="@(() => Model.OptionValue)"
+                                        Variant="Variant.Filled"
+                                    />
+                                }
+                            </MudItem>
+                            <MudItem md="6" xs="12">
                                 @if (Loading)
                                 {
                                     <MudSkeleton />
@@ -58,15 +69,12 @@
                                 }
                                 else
                                 {
-                                    <MudTextField 
-                                        T="string" 
-                                        Label="Password" 
-                                        InputType="InputType.Password"
-                                        Required="true"
-                                        RequiredError="Password is required." 
-                                        @bind-Value="Password"
-                                        For=@(() => Password)
-                                        Variant="Variant.Filled"
+                                    <MudCheckBox 
+                                        @bind-Value="Model.IsActive"
+                                        Label="Is Active"
+                                        Size="Size.Small"
+                                        Color="Color.Secondary"
+                                        For=@(() => Model.IsActive)
                                     />
                                 }
                             </MudItem>
@@ -95,11 +103,11 @@
                             Variant="Variant.Filled" 
                             Color="Color.Secondary"
                             aria-label="Go Back"
-                            OnClick=@(() => DeleteUser())
+                            OnClick=@(() => Navigation.NavigateTo($"/Module/{ModuleIdStr}"))
                             DisableElevation="true" 
                             FullWidth="true"
                         >
-                            Delete
+                            Back 
                         </MudButton>
                     </MudItem>
                 </MudGrid>
@@ -109,55 +117,41 @@
 </MudForm>
 
 
-@code {
-    MudForm Form { get; set; }
 
-    public bool Loading { get; set; } = true;
+@code {
+    public MudForm Form { get; set; }
+
+    public OptionModel Model { get; set; } = new OptionModel();
 
     [Parameter]
-    public string UserName { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
+    public string ModuleIdStr { get; set; } = string.Empty;
+    public int ModuleId { get; set; }
 
-    public SudoUserModel SudoUser { get; set; } = new SudoUserModel();
+    [Parameter]
+    public string OptIdStr { get; set; } = string.Empty;
+    public int OptId { get; set; }
+
+
+    public bool Loading { get; set; } = true;
 
     private async Task OnValidSubmit(EditContext context)
     {
         await Form.Validate();
         if (!Form.IsValid)
         {
-            Snackbar.Add("Please specify a password. ", Severity.Warning);
+            Snackbar.Add("Ensure all fields are correctly filled out. ", Severity.Warning);
             return;
         }
         try
         {
-            await UserService.UpdatePassword(UserName, Password);
-            Snackbar.Add("Updated password. ", Severity.Success);
-            Password = "";
-            StateHasChanged();
+            await OptionService.UpdateOption(Model);
+            Snackbar.Add("Successfully updated option. ", Severity.Success);
+            Navigation.NavigateTo($"/Module/{ModuleId}");
         }
-        catch (SudoUserNotFoundException)
+        catch (ObjectNotFoundException)
         {
-            Snackbar.Add("That's weird, we can't find this user. ", Severity.Error);
-            Navigation.NavigateTo("/Users");
-        }
-        catch
-        {
-            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
-        }
-    }
-
-    public async Task DeleteUser()
-    {
-        try
-        {
-            await UserService.DeleteUser(UserName);
-            Snackbar.Add("Successfully deleted user. ", Severity.Success);
-            Navigation.NavigateTo("Users");
-        }
-        catch (SudoUserNotFoundException)
-        {
-            Snackbar.Add("That's weird, we can't find this user. ", Severity.Error);
-            Navigation.NavigateTo("Users");
+            Snackbar.Add("Strange, looks like this option has been deleted. ", Severity.Error);
+            Navigation.NavigateTo($"/Module/{ModuleId}");
         }
         catch
         {
@@ -167,19 +161,38 @@
 
     protected override async Task GetData()
     {
+        if (!int.TryParse(ModuleIdStr, out var moduleId))
+        {
+            Snackbar.Add("Incorect module Id. ", Severity.Warning);
+            Navigation.NavigateTo("/Modules");
+            return;
+        }
+        if (!int.TryParse(OptIdStr, out var optId))
+        {
+            Snackbar.Add("Incorect option Id. ", Severity.Warning);
+            Navigation.NavigateTo($"/Module/{ModuleIdStr}");
+            return;
+        }
+        ModuleId = moduleId;
+        OptId = optId;
+        await GetModel();
+    }
+
+    public async Task GetModel()
+    {
         try
         {
-            SudoUser = await UserService.GetUser(UserName);
+            Model = await OptionService.GetOption(new OptionModel { ModuleId = ModuleId, OptionId = OptId });
         }
-        catch (SudoUserNotFoundException)
+        catch (ObjectNotFoundException)
         {
-            Snackbar.Add("No such user by that name. ", Severity.Warning);
-            Navigation.NavigateTo("/Users");
+            Snackbar.Add("That's weird, we can't find this option. ", Severity.Error);
+            Navigation.NavigateTo($"/Module/{ModuleIdStr}");
             return;
         }
         catch
         {
-            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+            Snackbar.Add("Something went really wrong there, go yell at Jason. ", Severity.Error);
         }
         finally
         {

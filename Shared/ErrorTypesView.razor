@@ -1,0 +1,191 @@
+﻿@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<MudGrid Class="pb-4" Spacing="0">
+    <MudItem sm="6" xs="12" Class="d-flex align-end">
+        <MudText Class="pt-2" Typo="Typo.h6">Error Types</MudText>
+    </MudItem>
+    <MudItem sm="6" xs="12">
+        <MudTextField 
+            @bind-Value="ErrorTypeSearchString" 
+            Placeholder="Search" 
+            Adornment="Adornment.Start" 
+            AdornmentIcon="@Icons.Material.Filled.Search" 
+            IconSize="Size.Small" 
+            Class="mt-0"
+        />
+    </MudItem>
+</MudGrid>
+<MudGrid>
+    <MudItem xs="12">
+        <MudTable 
+            Loading="Loading" 
+            Items="@ErrorTypes" 
+            Hover="true" 
+            MultiSelection="true"
+            SelectOnRowClick="false"
+            Dense="true"
+            Filter="new Func<ErrorTypeModel, bool>(ErrorTypeFilter)" 
+            @bind-SelectedItems="SelectedErrorTypes"
+        >
+            <HeaderContent>
+                <MudTh>Id</MudTh>
+                <MudTh>Error Message</MudTh>
+                <MudTh>Recoverable</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Id">@context.ErrorTypeId</MudTd>
+                <MudTd DataLabel="Name">@context.ErrorMessage</MudTd>
+                <MudTd DataLabel="Active">@(context.Recoverable ? "Recoverable" : "Unrecoverable")</MudTd>
+                <MudTd DataLabel="Actions">
+                    <MudIconButton 
+                        Icon="@Icons.Material.Filled.Edit"
+                        aria-label="Edit"
+                        OnClick=@(() => Navigation.NavigateTo($"/Module/{ModuleId}/ErrorType/{context.ErrorTypeId}"))
+                        Size="Size.Small"
+                        Color="Color.Primary"
+                    />
+                    <MudIconButton 
+                        Icon="@Icons.Material.Filled.Delete"
+                        aria-label="Delete"
+                        OnClick=@(() => DeleteErrorType(context))
+                        Size="Size.Small"
+                        Color="Color.Secondary"
+                    />
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Typo="Typo.subtitle1">Nothing to see here. </MudText>
+            </NoRecordsContent>
+            <PagerContent>
+                @if (ErrorTypes.Count() > 10)
+                {
+                    <MudTablePager />
+                }
+            </PagerContent>
+        </MudTable>
+    </MudItem>
+</MudGrid>
+
+<MudGrid Class="pt-2">
+    <MudItem xs="12">
+        <MudGrid Justify="Justify.FlexStart" Spacing="1">
+            <MudItem md="4" sm="6" xs="12">
+                <MudButton 
+                    Variant="Variant.Filled" 
+                    Color="Color.Primary" 
+                    OnClick=@(() => Navigation.NavigateTo($"/Module/{ModuleId}/ErrorTypeNew")) 
+                    DisableElevation="true" 
+                    FullWidth="true"
+                    aria-label="New error type"
+                >
+                    New Error Type
+                </MudButton>
+            </MudItem>
+            @if (SelectedErrorTypes.Any())
+            {
+                <MudItem md="4" sm="6" xs="12">
+                    <MudButton 
+                        Variant="Variant.Filled" 
+                        Color="Color.Secondary"
+                        OnClick="() => DeleteErrorTypes()"
+                        DisableElevation="true" 
+                        FullWidth="true"
+                        aria-label="Delete error type"
+                    >
+                        Delete Error Type
+                    </MudButton>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter]
+    public IEnumerable<ErrorTypeModel> ErrorTypes { get; set; } = new List<ErrorTypeModel>();
+    [Parameter]
+    public EventCallback<IEnumerable<ErrorTypeModel>> ErrorTypesChanged { get; set; }
+
+    [Parameter]
+    public bool Loading { get; set; } = true;
+    [Parameter]
+    public EventCallback<bool> LoadingChanged { get; set; }
+
+    [Parameter]
+    public ErrorTypeService ErrorTypeService { get; set; }
+
+    [Parameter]
+    public int ModuleId { get; set; }
+
+    public string ErrorTypeSearchString { get; set; } = "";
+    public HashSet<ErrorTypeModel> SelectedErrorTypes = new HashSet<ErrorTypeModel>();
+    public bool ErrorTypeFilter(ErrorTypeModel element) => ErrorTypeFilterFunc(element, ErrorTypeSearchString);
+
+    public bool ErrorTypeFilterFunc(ErrorTypeModel element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.ErrorMessage.ToString().Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.ErrorTypeId.ToString().Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    public bool OptionFilterFunc(OptionModel element, string searchString)
+    {
+        string active = element.IsActive ? "Active" : "Inactive";
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.ModuleId.ToString().Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.OptionValue.ToString().Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (active.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    public async Task DeleteErrorType(ErrorTypeModel opt)
+    {
+        try
+        {
+            await ErrorTypeService.DeleteErrorType(opt);
+            Snackbar.Add("Deleted error type. ", Severity.Success);
+            await ErrorTypesChanged.InvokeAsync(await ErrorTypeService.GetErrorTypesForModule(ModuleId));
+            StateHasChanged();
+        }
+        catch (ObjectNotFoundException)
+        {
+            Snackbar.Add($"Hmmm, strange, couldn't find a error type with the ID {opt.ModuleId} on this module. ", Severity.Error);
+        }
+        catch
+        {
+            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+        }
+    }
+
+    public async Task DeleteErrorTypes()
+    {
+        try
+        {
+            await ErrorTypeService.DeleteErrorTypes(SelectedErrorTypes);
+            Snackbar.Add("Deleted error types. ", Severity.Success);
+            await ErrorTypesChanged.InvokeAsync(await ErrorTypeService.GetErrorTypesForModule(ModuleId));
+            StateHasChanged();
+        }
+        catch (ObjectNotFoundException ex)
+        {
+            Snackbar.Add($"That was weird. {ex.Message}", Severity.Error);
+        }
+        catch
+        {
+            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+        }
+    }
+
+}

@@ -11,103 +11,125 @@
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
 
+@if (!IsStartup)
+{
+    <MudGrid Class="pb-2" Spacing="0" Justify="Justify.Center">
+        <MudItem xs="12" sm="7" Class="d-flex align-end px-1">
+            <MudText Class="pt-2" Typo="Typo.h6">User Login</MudText>
+        </MudItem>
+    </MudGrid>
 
-<MudGrid Justify="Justify.Center">
-    <MudItem xs="12" sm="7">
-        <MudPaper Class="pa-4">
-            @if (!IsStartup)
-            {
-                <MudText Typo="Typo.h6">User Login</MudText>
-                <MudForm @ref="PwForm">
-                    <MudTextField 
-                        T="string" 
-                        Label="Username" 
-                        Required="true" 
-                        RequiredError="User name is required." 
-                        @bind-Value="UserName"
-                    />
-                    <MudTextField 
-                        T="string" 
-                        Label="Password" 
-                        InputType="InputType.Password"
-                        Required="true"
-                        RequiredError="Password is required." 
-                        @bind-Value="Password"
-                    />
-                </MudForm>
+    <MudForm @ref="UserNameForm">
+        <EditForm Model="@UsernamePassword" OnValidSubmit="OnValidSubmitLogin">
+            <MudGrid Justify="Justify.Center">
+                <MudItem xs="12" sm="7">
+                    <MudCard>
+                        <MudCardContent>
+                            <MudGrid Spacing="1">
+                                <MudItem xs="12">
+                                    <MudTextField 
+                                        T="string" 
+                                        Label="Username"
+                                        Variant="Variant.Filled"
+                                        @bind-Value="UsernamePassword.UserName" 
+                                        For=@(() => UsernamePassword.UserName)
+                                    />
+                                </MudItem>
+                                <MudItem xs="12">
+                                    <MudTextField 
+                                        T="string" 
+                                        Label="Password" 
+                                        InputType="InputType.Password"
+                                        Variant="Variant.Filled"
+                                        @bind-Value="UsernamePassword.Password" 
+                                        For=@(() => UsernamePassword.Password)
+                                    />
+                                </MudItem>
+                            </MudGrid>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+            <MudGrid Justify="Justify.Center" Class="pt-2">
+                <MudItem xs="12" sm="7">
+                    <MudGrid Justify="Justify.FlexStart" Spacing="1">
+                        <MudItem md="4" sm="6" xs="12">
+                            <MudButton 
+                                Variant="Variant.Filled" 
+                                aria-label="Save edit"
+                                Color="Color.Primary"
+                                ButtonType="ButtonType.Submit"
+                                DisableElevation="true" 
+                                FullWidth="true"
+                            >
+                                Login
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+    </MudForm>
+}
+else 
+{
+    <MudGrid Class="pb-2" Spacing="0" Justify="Justify.Center">
+        <MudItem xs="12" sm="7" Class="d-flex align-end">
+            <MudText Class="pt-2" Typo="Typo.h6">Start Up Login</MudText>
+        </MudItem>
+    </MudGrid>
 
-                <div class="d-flex pt-4">
-                    <MudButton 
-                        Variant="Variant.Filled" 
-                        Color="Color.Primary"
-                        OnClick="() => LogIn()"
-                        DisableElevation="true" 
-                    >
-                        Log In
-                    </MudButton>
-                </div>
-            }
-            else
-            {
-                <MudText Typo="Typo.h6">Startup Login</MudText>
-                <MudForm @ref="StartupForm">
-                    <MudTextField 
-                        T="string" 
-                        Label="Startup Passcode" 
-                        InputType="InputType.Password"
-                        Required="true"
-                        RequiredError="Passcode is required." 
-                        @bind-Value="StartupPasscode"
-                    />
-                </MudForm>
-                <div class="d-flex pt-4">
-                    <MudButton 
-                        Variant="Variant.Filled" 
-                        Color="Color.Primary"
-                        OnClick="() => SatrtUpLogIn()"
-                        DisableElevation="true" 
-                    >
-                        Log In
-                    </MudButton>
-                </div>
-            }
-        </MudPaper>
-    </MudItem>
-</MudGrid>
+    <MudForm @ref="StartupForm">
+        <EditForm Model="@StartupPasscode" OnValidSubmit="OnValidSubmitStartupLogin">
+            <MudGrid Justify="Justify.Center">
+                <MudItem xs="12" sm="7">
+                    <MudCard>
+                        <MudCardContent>
+                            <MudGrid Spacing="1">
+                                <MudItem xs="12">
+                                    <MudTextField 
+                                        T="string" 
+                                        Label="Startup Passcode" 
+                                        InputType="InputType.Password"
+                                        @bind-Value="StartupPasscode.Passcode" 
+                                        For=@(() => StartupPasscode.Passcode)
+                                    />
+                                </MudItem>
+                            </MudGrid>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+            <MudGrid Justify="Justify.Center" Class="pt-2">
+                <MudItem xs="12" sm="7">
+                    <MudGrid Justify="Justify.FlexStart" Spacing="1">
+                        <MudItem md="4" sm="6" xs="12">
+                            <MudButton 
+                                Variant="Variant.Filled" 
+                                aria-label="Save edit"
+                                Color="Color.Primary"
+                                ButtonType="ButtonType.Submit"
+                                DisableElevation="true" 
+                                FullWidth="true"
+                            >
+                                Login
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+    </MudForm>
+}
 
 @code {
-    MudForm PwForm { get; set; }
-    MudForm StartupForm { get; set; }
+    public MudForm UserNameForm { get; set; }
+    public MudForm StartupForm { get; set; }
 
-    public string UserName { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-
-    public string StartupPasscode { get; set; } = string.Empty;
+    public UsernamePassword UsernamePassword { get; set; } = new UsernamePassword();
+    public PassCodeModel StartupPasscode { get; set; } = new PassCodeModel();
 
     public bool IsStartup { get; set; }
-
-
-    public async Task LogIn()
-    {
-        await PwForm.Validate();
-        if (!PwForm.IsValid)
-        {
-            Snackbar.Add("Please ensure username & password is completed. ", Severity.Warning);
-            return;
-        }
-        await TryLogin(async () => await SudoUserService.SignUserIn(UserName, Password));
-    }
-
-    public async Task SatrtUpLogIn()
-    {
-        await StartupForm.Validate();
-        if (!StartupForm.IsValid)
-        {
-            Snackbar.Add("Please enter a passcode. ", Severity.Warning);
-            return;
-        }
-        await TryLogin(async () => await SudoUserService.StartupSignIn(StartupPasscode));
-    }
 
     public async Task TryLogin(Func<Task<SudoSession>> loginCurriedFunc)
     {
@@ -131,6 +153,28 @@
         {
             Snackbar.Add("Something went really wrong there, go yell at Jason. ", Severity.Error);
         }
+    }
+
+    private async Task OnValidSubmitLogin(EditContext context)
+    {
+        await UserNameForm.Validate();
+        if (!UserNameForm.IsValid)
+        {
+            Snackbar.Add("Ensure username and password is entered. ", Severity.Warning);
+            return;
+        }
+        await TryLogin(async () => await SudoUserService.SignUserIn(UsernamePassword.UserName, UsernamePassword.Password));
+    }
+
+    private async Task OnValidSubmitStartupLogin(EditContext context)
+    {
+        await StartupForm.Validate();
+        if (!StartupForm.IsValid)
+        {
+            Snackbar.Add("Please enter a startup passcode. ", Severity.Warning);
+            return;
+        }
+        await TryLogin(async () => await SudoUserService.StartupSignIn(StartupPasscode.Passcode));
     }
 
     protected override async Task OnInitializedAsync()

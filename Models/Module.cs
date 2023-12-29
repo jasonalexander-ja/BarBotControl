@@ -10,4 +10,14 @@ public class Module
     public bool IsActive { get; set; }
     public ICollection<Option> Options { get; } = new List<Option>();
     public ICollection<SequenceItem> SequenceItems { get; set; } = new List<SequenceItem>();
+    public ICollection<ErrorType> ErrorTypes { get; set; } = new List<ErrorType>();
+
+    public Module() { }
+    public Module(ModuleModel model)
+    {
+        ModuleId = model.ModuleId;
+        Channel = model.Channel;
+        Name = model.Name;
+        IsActive = model.IsActive;
+    }
 }

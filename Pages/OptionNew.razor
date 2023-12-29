@@ -1,8 +1,7 @@
-﻿@using BarBotControl.Exceptions.SudoUser
-@inherits AuthedPageBase
-@page "/UserNew"
+﻿@inherits AuthedPageBase
+@page "/Module/{ModuleIdStr}/OptionNew"
 
-@inject SudoUserService UserService
+@inject OptionService OptionService
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
 
@@ -13,17 +12,18 @@
             <MudIconButton 
                 Icon="@Icons.Material.Filled.ArrowBack"
                 aria-label="Go Back"
-                OnClick=@(() => Navigation.NavigateTo("/Users"))
+                OnClick=@(() => Navigation.NavigateTo($"/Module/{ModuleIdStr}"))
                 Size="Size.Medium"
                 Color="Color.Secondary"
             />
-            New User
+            New Option
         </MudText>
     </MudItem>
 </MudGrid>
 
 <MudForm @ref="Form">
-    <EditForm Model="@UsernamePassword" OnValidSubmit="OnValidSubmit">
+    <EditForm Model="@Model" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator/>
         <MudGrid Justify="Justify.Center">
             <MudItem xs="12" sm="7">
                 <MudCard>
@@ -31,22 +31,27 @@
                         <MudGrid Spacing="1">
                             <MudItem md="6" xs="12">
                                 <MudTextField 
-                                    T="string" 
-                                    Label="Username" 
-                                    @bind-Value="UsernamePassword.UserName" 
-                                    For=@(() => UsernamePassword.UserName)
+                                    Label="Name"
+                                    @bind-Value="Model.Name" 
+                                    For="@(() => Model.Name)"
                                     Variant="Variant.Filled"
                                 />
                             </MudItem>
                             <MudItem md="6" xs="12">
-                                <MudTextField 
-                                    T="string" 
-                                    Label="Password" 
-                                    Required="true"
-                                    InputType="InputType.Password"
-                                    @bind-Value="UsernamePassword.Password" 
-                                    For=@(() => UsernamePassword.Password)
+                                <MudNumericField  
+                                    Label="Value"
+                                    @bind-Value="Model.OptionValue"
+                                    For="@(() => Model.OptionValue)"
                                     Variant="Variant.Filled"
+                                />
+                            </MudItem>
+                            <MudItem md="6" xs="12">
+                                <MudCheckBox 
+                                    @bind-Value="Model.IsActive"
+                                    Label="Is Active"
+                                    Size="Size.Small"
+                                    Color="Color.Secondary"
+                                    For=@(() => Model.IsActive)
                                 />
                             </MudItem>
                         </MudGrid>
@@ -74,7 +79,7 @@
                             Variant="Variant.Filled" 
                             Color="Color.Secondary"
                             aria-label="Go Back"
-                            OnClick=@(() => Navigation.NavigateTo("/Users"))
+                            OnClick=@(() => Navigation.NavigateTo($"/Module/{ModuleIdStr}"))
                             DisableElevation="true" 
                             FullWidth="true"
                         >
@@ -88,9 +93,15 @@
 </MudForm>
 
 
+
 @code {
-    MudForm Form;
-    public UsernamePassword UsernamePassword { get; set; } = new UsernamePassword();
+    public MudForm Form { get; set; }
+
+    public OptionModel Model { get; set; } = new OptionModel();
+
+    [Parameter]
+    public string ModuleIdStr { get; set; } = string.Empty;
+    public int ModuleId { get; set; }
 
     private async Task OnValidSubmit(EditContext context)
     {
@@ -102,17 +113,30 @@
         }
         try
         {
-            var newUser = await UserService.AddUser(UsernamePassword.UserName, UsernamePassword.Password);
-            Snackbar.Add("User created. ", Severity.Success);
-            Navigation.NavigateTo("/Users");
+            Model.ModuleId = ModuleId;
+            await OptionService.AddOption(Model);
+            Snackbar.Add("Successfully saved option. ", Severity.Success);
+            Navigation.NavigateTo($"/Module/{ModuleId}");
         }
-        catch (SudoUserExistsException)
+        catch (ObjectNotFoundException)
         {
-            Snackbar.Add("There is already a user by this name.  ", Severity.Error);
+            Snackbar.Add("Strange, looks like this option has been deleted. ", Severity.Error);
+            Navigation.NavigateTo($"/Module/{ModuleId}");
         }
         catch
         {
             Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
         }
+    }
+
+    protected override async Task GetData()
+    {
+        if (!int.TryParse(ModuleIdStr, out var moduleId))
+        {
+            Snackbar.Add("Incorect module Id. ", Severity.Warning);
+            Navigation.NavigateTo("/Modules");
+            return;
+        }
+        ModuleId = moduleId;
     }
 }

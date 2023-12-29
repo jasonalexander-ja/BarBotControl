@@ -39,6 +39,12 @@ builder.Services.AddScoped<SudoUserService>();
 builder.Services.AddScoped<ModuleDataService>();
 builder.Services.AddScoped<ModuleService>();
 
+builder.Services.AddScoped<OptionDataService>();
+builder.Services.AddScoped<OptionService>();
+
+builder.Services.AddScoped<ErrorTypeDataService>();
+builder.Services.AddScoped<ErrorTypeService>();
+
 
 
 

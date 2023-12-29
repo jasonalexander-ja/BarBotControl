@@ -45,26 +45,21 @@ public class ModuleService
     public async Task<ModuleModel> GetModule(int id)
     {
         var result = await ModuleDataService.GetModule(id);
-        var resultModel = new ModuleModel()
-        {
-            ModuleId = result.ModuleId,
-            Channel = result.Channel,
-            Name = result.Name,
-            IsActive = result.IsActive,
-        };
+        var resultModel = new ModuleModel(result);
+        return resultModel;
+    }
+
+    public async Task<ModuleModel> GetModuleWithRelatedData(int id)
+    {
+        var result = await ModuleDataService.GetModuleWithRelatedData(id);
+        var resultModel = new ModuleModel(result);
         return resultModel;
     }
 
     public async Task<List<ModuleModel>> GetModules()
     {
         var result = await ModuleDataService.GetModules();
-        return result.Select(m => new ModuleModel()
-        {
-            ModuleId = m.ModuleId,
-            Channel = m.Channel,
-            Name = m.Name,
-            IsActive = m.IsActive,
-        }).ToList();
+        return result.Select(m => new ModuleModel(m)).ToList();
     }
 
     public async Task DeleteModule(ModuleModel module)

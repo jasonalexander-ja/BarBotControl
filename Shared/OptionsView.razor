@@ -1,0 +1,212 @@
+﻿@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<MudGrid Class="pb-4" Spacing="0">
+    <MudItem sm="6" xs="12" Class="d-flex align-end">
+        <MudText Class="pt-2" Typo="Typo.h6">Options</MudText>
+    </MudItem>
+    <MudItem sm="6" xs="12">
+        <MudTextField 
+            @bind-Value="OptionSearchString" 
+            Placeholder="Search" 
+            Adornment="Adornment.Start" 
+            AdornmentIcon="@Icons.Material.Filled.Search" 
+            IconSize="Size.Medium" 
+            Class="mt-0"
+        />
+    </MudItem>
+</MudGrid>
+<MudGrid>
+    <MudItem xs="12">
+        <MudTable 
+            Loading="Loading" 
+            Items="@Options" 
+            Hover="true" 
+            MultiSelection="true"
+            SelectOnRowClick="false"
+            Dense="true"
+            Filter="new Func<OptionModel, bool>(OptionFilter)" 
+            @bind-SelectedItems="SelectedOptions"
+        >
+            <HeaderContent>
+                <MudTh>Id</MudTh>
+                <MudTh>Value</MudTh>
+                <MudTh>Name</MudTh>
+                <MudTh>Active</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Id">@context.OptionId</MudTd>
+                <MudTd DataLabel="Value">@context.OptionValue</MudTd>
+                <MudTd DataLabel="Name">@context.Name</MudTd>
+                <MudTd DataLabel="Active">
+                    <MudSwitch 
+                        T="bool" 
+                        aria-label=@("Active Toggle: " + (context.IsActive ? "Active": "Inactive")) 
+                        Size="Size.Small"
+                        Value="@context.IsActive"
+                        ValueChanged=@(() => ToggleOptionActive(context))
+                        Color="Color.Secondary"
+                    />
+                </MudTd>
+                <MudTd DataLabel="Actions">
+                    <MudIconButton 
+                        Icon="@Icons.Material.Filled.Edit"
+                        aria-label="Edit"
+                        OnClick=@(() => Navigation.NavigateTo($"/Module/{ModuleId}/Option/{context.OptionId}"))
+                        Size="Size.Small"
+                        Color="Color.Primary"
+                    />
+                    <MudIconButton 
+                        Icon="@Icons.Material.Filled.Delete"
+                        aria-label="Delete"
+                        OnClick=@(() => DeleteOption(context))
+                        Size="Size.Small"
+                        Color="Color.Secondary"
+                    />
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Typo="Typo.subtitle1">Nothing to see here. </MudText>
+            </NoRecordsContent>
+            <PagerContent>
+                    @if (Options.Count() > 10)
+                {
+                    <MudTablePager />
+                }
+            </PagerContent>
+        </MudTable>
+    </MudItem>
+</MudGrid>
+<MudGrid Class="pt-2">
+    <MudItem xs="12">
+        <MudGrid Justify="Justify.FlexStart" Spacing="1">
+            <MudItem md="4" sm="6" xs="12">
+                <MudButton 
+                    Variant="Variant.Filled" 
+                    Color="Color.Primary" 
+                    OnClick=@(() => Navigation.NavigateTo($"/Module/{ModuleId}/OptionNew")) 
+                    DisableElevation="true" 
+                    FullWidth="true"
+                    aria-label="New option"
+                >
+                    New Option
+                </MudButton>
+            </MudItem>
+            @if (SelectedOptions.Any())
+            {
+                <MudItem md="4" sm="6" xs="12">
+                    <MudButton 
+                        Variant="Variant.Filled" 
+                        Color="Color.Secondary"
+                        OnClick="() => DeleteOptions()"
+                        DisableElevation="true" 
+                        FullWidth="true"
+                        aria-label="Delete modules"
+                    >
+                        Delete Modules
+                    </MudButton>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter]
+    public IEnumerable<OptionModel> Options { get; set; } = new List<OptionModel>();
+    [Parameter]
+    public EventCallback<IEnumerable<OptionModel>> OptionsChanged { get; set; }
+
+    [Parameter]
+    public bool Loading { get; set; } = true;
+    [Parameter]
+    public EventCallback<bool> LoadingChanged { get; set; }
+
+    [Parameter]
+    public OptionService OptionService { get; set; }
+
+    [Parameter]
+    public int ModuleId { get; set; }
+
+
+    public string OptionSearchString { get; set; } = "";
+    public HashSet<OptionModel> SelectedOptions = new HashSet<OptionModel>();
+    public bool OptionFilter(OptionModel element) => OptionFilterFunc(element, OptionSearchString);
+
+    public bool OptionFilterFunc(OptionModel element, string searchString)
+    {
+        string active = element.IsActive ? "Active" : "Inactive";
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.ModuleId.ToString().Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.OptionValue.ToString().Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (active.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    public async Task ToggleOptionActive(OptionModel opt)
+    {
+        opt.IsActive = !opt.IsActive;
+        try
+        {
+            await OptionService.UpdateOption(opt);
+            Snackbar.Add("Toggled option. ", Severity.Success);
+            await OptionsChanged.InvokeAsync(await OptionService.GetOptionsForModule(ModuleId));
+            StateHasChanged();
+        }
+        catch (ObjectNotFoundException)
+        {
+            Snackbar.Add($"Hmmm, strange, couldn't find a option with the ID {opt.OptionId} on this module. ", Severity.Error);
+        }
+        catch
+        {
+            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+        }
+    }
+
+    public async Task DeleteOption(OptionModel opt)
+    {
+        try
+        {
+            await OptionService.DeleteOption(opt);
+            Snackbar.Add("Deleted module. ", Severity.Success);
+            await OptionsChanged.InvokeAsync(await OptionService.GetOptionsForModule(ModuleId));
+            StateHasChanged();
+        }
+        catch (ObjectNotFoundException)
+        {
+            Snackbar.Add($"Hmmm, strange, couldn't find a option with the ID {opt.ModuleId} on this module. ", Severity.Error);
+        }
+        catch
+        {
+            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+        }
+    }
+
+    public async Task DeleteOptions()
+    {
+        try
+        {
+            await OptionService.DeleteOptions(SelectedOptions);
+            Snackbar.Add("Deleted modules. ", Severity.Success);
+            await OptionsChanged.InvokeAsync(await OptionService.GetOptionsForModule(ModuleId));
+            StateHasChanged();
+        }
+        catch (ObjectNotFoundException ex)
+        {
+            Snackbar.Add($"That was weird. {ex.Message}", Severity.Error);
+        }
+        catch
+        {
+            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+        }
+    }
+
+
+}

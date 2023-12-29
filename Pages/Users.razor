@@ -8,11 +8,12 @@
 @inject SessionService SessionService
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 
-<MudGrid Class="py-4" Spacing="0">
-    <MudItem sm="6" xs="12" Class="d-flex align-center">
-        <MudText Typo="Typo.h6">Sudo Users</MudText>
+<MudGrid Class="pb-4" Spacing="0">
+    <MudItem sm="6" xs="12" Class="d-flex align-end">
+        <MudText Class="pt-2" Typo="Typo.h6">Sudo Users</MudText>
     </MudItem>
     <MudItem sm="6" xs="12">
         <MudTextField 
@@ -31,6 +32,7 @@
     Items="@Elements" 
     Hover="true" 
     MultiSelection="true"
+    SelectOnRowClick="false"
     Filter="new Func<SudoUserModel, bool>(Filter)" 
     @bind-SelectedItems="SelectedItems"
 >
@@ -45,14 +47,14 @@
                 Icon="@Icons.Material.Filled.Edit"
                 aria-label="Edit"
                 OnClick=@(() => Navigation.NavigateTo($"/User/{context.UserName}"))
-                Size="Size.Small"
+                Size="Size.Medium"
                 Color="Color.Primary"
             />
             <MudIconButton 
                 Icon="@Icons.Material.Filled.Delete"
                 aria-label="Delete"
                 OnClick=@(() => DeleteUser(context.UserName))
-                Size="Size.Small"
+                Size="Size.Medium"
                 Color="Color.Secondary"
             />
         </MudTd>
@@ -128,6 +130,9 @@
         try
         {
             await UserService.DeleteUser(userName);
+            Snackbar.Add("Deleted user. ", Severity.Success);
+            Elements = await UserService.GetUsers();
+            StateHasChanged();
         }
         catch (SudoUserNotFoundException)
         {
@@ -144,6 +149,9 @@
         try
         {
             await UserService.DeleteUsers(SelectedItems);
+            Snackbar.Add("Deleted users. ", Severity.Success);
+            Elements = await UserService.GetUsers();
+            StateHasChanged();
         }
         catch (SudoUserNotFoundException ex)
         {

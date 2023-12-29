@@ -2,7 +2,7 @@
 
 namespace BarBotControl.Models;
 
-public class ErrorType
+public class ErrorTypeModel
 {
     public int ErrorTypeId { get; set; }
     public string ErrorMessage { get; set; } = string.Empty;
@@ -10,12 +10,8 @@ public class ErrorType
     public int ModuleId { get; set; }
     [Comment("Recovery Sequence Id")]
     public int? SequenceId { get; set; }
-    public Module Module { get; set; } = null!;
-    [Comment("Recovery Sequence")]
-    public Sequence? Sequence { get; set; }
 
-    public ErrorType() { }
-    public ErrorType(ErrorTypeModel err)
+    public ErrorTypeModel(ErrorType err)
     {
         ErrorTypeId = err.ErrorTypeId;
         ErrorMessage = err.ErrorMessage;

@@ -18,8 +18,18 @@ public class AppDbContext : DbContext
             .HasIndex(u => u.UserName)
             .IsUnique();
 
+        modelBuilder.Entity<Option>()
+            .HasIndex(u => u.OptionValue)
+            .IsUnique();
+
         modelBuilder.Entity<Module>()
             .HasMany(e => e.Options)
+            .WithOne(e => e.Module)
+            .HasForeignKey(e => e.ModuleId)
+            .IsRequired();
+
+        modelBuilder.Entity<Module>()
+            .HasMany(e => e.ErrorTypes)
             .WithOne(e => e.Module)
             .HasForeignKey(e => e.ModuleId)
             .IsRequired();
