@@ -29,15 +29,15 @@
             @bind-SelectedItems="SelectedErrorTypes"
         >
             <HeaderContent>
-                <MudTh>Id</MudTh>
+                <MudTh>Value</MudTh>
                 <MudTh>Error Message</MudTh>
                 <MudTh>Recoverable</MudTh>
                 <MudTh>Actions</MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd DataLabel="Id">@context.ErrorTypeId</MudTd>
+                <MudTd DataLabel="Value">@context.ErrorValue</MudTd>
                 <MudTd DataLabel="Name">@context.ErrorMessage</MudTd>
-                <MudTd DataLabel="Active">@(context.Recoverable ? "Recoverable" : "Unrecoverable")</MudTd>
+                <MudTd DataLabel="Recoverable">@(context.Recoverable ? "Recoverable" : "Unrecoverable")</MudTd>
                 <MudTd DataLabel="Actions">
                     <MudIconButton 
                         Icon="@Icons.Material.Filled.Edit"

@@ -1,8 +1,8 @@
 ﻿@using BarBotControl.Exceptions.SudoUser
 @inherits AuthedPageBase
-@page "/ModuleNew"
+@page "/SequenceNew"
 
-@inject ModuleService ModuleService
+@inject SequenceService SequenceService
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
 
@@ -13,46 +13,40 @@
             <MudIconButton 
                 Icon="@Icons.Material.Filled.ArrowBack"
                 aria-label="Go Back"
-                OnClick=@(() => Navigation.NavigateTo("/Modules"))
+                OnClick=@(() => Navigation.NavigateTo("/Sequences"))
                 Size="Size.Medium"
                 Color="Color.Secondary"
             />
-            New Module
+            New Sequence
         </MudText>
     </MudItem>
 </MudGrid>
 
 <MudForm @ref="Form">
     <EditForm Model="@Model" OnValidSubmit="OnValidSubmit">
-        <DataAnnotationsValidator/>
         <MudGrid Justify="Justify.Center">
             <MudItem xs="12" sm="7">
                 <MudCard>
                     <MudCardContent>
                         <MudGrid Spacing="1">
-                            <MudItem md="6" xs="12">
+                            <MudItem xs="12">
                                 <MudTextField 
-                                    Label="Name"
+                                    T="string" 
+                                    Label="Name" 
                                     @bind-Value="Model.Name" 
-                                    For="@(() => Model.Name)"
+                                    For=@(() => Model.Name)
                                     Variant="Variant.Filled"
                                 />
                             </MudItem>
-                            <MudItem md="6" xs="12">
-                                <MudNumericField  
-                                    Label="Channel"
-                                    @bind-Value="Model.Channel" 
-                                    For="@(() => Model.Channel)"
+                            <MudItem xs="12">
+                                <MudTextField 
+                                    T="string" 
+                                    Label="Description" 
+                                    Required="true"
+                                    Lines="3"
+                                    @bind-Value="Model.Description" 
+                                    For=@(() => Model.Description)
                                     Variant="Variant.Filled"
-                                />
-                            </MudItem>
-                            <MudItem md="6" xs="12" Class="d-flex align-center">
-                                <MudCheckBox 
-                                    @bind-Value="Model.IsActive"
-                                    Label="Is Active"
-                                    Size="Size.Small"
-                                    Color="Color.Secondary"
-                                    For=@(() => Model.IsActive)
                                 />
                             </MudItem>
                         </MudGrid>
@@ -80,7 +74,7 @@
                             Variant="Variant.Filled" 
                             Color="Color.Secondary"
                             aria-label="Go Back"
-                            OnClick=@(() => Navigation.NavigateTo("/Modules"))
+                            OnClick=@(() => Navigation.NavigateTo("/Sequences"))
                             DisableElevation="true" 
                             FullWidth="true"
                         >
@@ -96,7 +90,7 @@
 
 @code {
     MudForm Form;
-    public ModuleModel Model { get; set; } = new ModuleModel();
+    public SequenceModel Model { get; set; } = new SequenceModel();
 
     private async Task OnValidSubmit(EditContext context)
     {
@@ -108,9 +102,9 @@
         }
         try
         {
-            var result = await ModuleService.CreateModule(Model);
-            Snackbar.Add("Successfully created module. ", Severity.Success);
-            Navigation.NavigateTo($"/Module/{result.ModuleId}");
+            var newSequence = await SequenceService.AddSequence(Model);
+            Snackbar.Add("Sequence created. ", Severity.Success);
+            Navigation.NavigateTo($"/Sequence/{newSequence.SequenceId}");
         }
         catch
         {

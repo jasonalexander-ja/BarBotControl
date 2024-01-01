@@ -15,9 +15,9 @@ public class SequenceDataService
         Context = context;
     }
 
-    public async Task<Sequence> AddSequence(SequenceModel opt)
+    public async Task<Sequence> AddSequence(SequenceModel seq)
     {
-        var seqModel = new Sequence(opt);
+        var seqModel = new Sequence(seq);
         Context.Sequences.Add(seqModel);
         await Context.SaveChangesAsync();
         return seqModel;
@@ -25,17 +25,40 @@ public class SequenceDataService
 
     public async Task<Sequence> GetSequence(int seqId)
     {
-        var optionModel = await Context.Sequences.FirstOrDefaultAsync(o => o.SequenceId == seqId);
-        if (optionModel is null) 
+        var sequenceModel = await Context.Sequences.FirstOrDefaultAsync(o => o.SequenceId == seqId);
+        if (sequenceModel is null) 
         {
-            throw new ObjectNotFoundException($"Cannot find option `{seqId}`. ");
+            throw new ObjectNotFoundException($"Cannot find sequence `{seqId}`. ");
         }
-        return optionModel;
+        return sequenceModel;
+    }
+
+    public async Task<Sequence> GetSequenceWithItems(int seqId)
+    {
+        var sequenceModel = await Context.Sequences.FirstOrDefaultAsync(o => o.SequenceId == seqId);
+        if (sequenceModel is null)
+        {
+            throw new ObjectNotFoundException($"Cannot find sequence `{seqId}`. ");
+        }
+        sequenceModel.SequenceItems = await Context.Entry(sequenceModel)
+            .Collection(i => i.SequenceItems)
+            .Query()
+            .Include(i => i.Module)
+            .Include(i => i.Option)
+            .ToListAsync();
+        return sequenceModel;
     }
 
     public async Task<List<Sequence>> GetSequences()
     {
         return await Context.Sequences.ToListAsync();
+    }
+
+    public async Task<List<Sequence>> GetSequencesWithItems()
+    {
+        return await Context.Sequences
+            .Include(s => s.SequenceItems)
+            .ToListAsync();
     }
 
     public async Task<Sequence> UpdateSequence(SequenceModel seq)
@@ -58,8 +81,8 @@ public class SequenceDataService
     {
         foreach (var seq in sequences)
         {
-            var optionModel = await GetSequence(seq.SequenceId);
-            Context.Sequences.Remove(optionModel);
+            var sequenceModel = await GetSequence(seq.SequenceId);
+            Context.Sequences.Remove(sequenceModel);
         }
         await Context.SaveChangesAsync();
     }

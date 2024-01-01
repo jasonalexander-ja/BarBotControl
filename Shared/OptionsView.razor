@@ -29,14 +29,12 @@
             @bind-SelectedItems="SelectedOptions"
         >
             <HeaderContent>
-                <MudTh>Id</MudTh>
                 <MudTh>Value</MudTh>
                 <MudTh>Name</MudTh>
                 <MudTh>Active</MudTh>
                 <MudTh>Actions</MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd DataLabel="Id">@context.OptionId</MudTd>
                 <MudTd DataLabel="Value">@context.OptionValue</MudTd>
                 <MudTd DataLabel="Name">@context.Name</MudTd>
                 <MudTd DataLabel="Active">

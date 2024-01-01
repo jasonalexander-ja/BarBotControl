@@ -1,7 +1,8 @@
 ﻿@inherits AuthedPageBase
-@page "/Module/{ModuleId:int}/Option/{OptId:int}"
+@page "/Module/{ModuleId:int}/ErrorType/{ErrorType:int}"
 
-@inject OptionService OptionService
+@inject ErrorTypeService ErrorTypeService
+@inject SequenceService SequenceService
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
 
@@ -16,7 +17,7 @@
                 Size="Size.Medium"
                 Color="Color.Secondary"
             />
-            Edit Option
+            Edit Error Type
         </MudText>
     </MudItem>
 </MudGrid>
@@ -35,12 +36,28 @@
                                     <MudSkeleton />
                                     <MudSkeleton />
                                 }
-                                else
+                                else 
                                 {
                                     <MudTextField 
-                                        Label="Name"
-                                        @bind-Value="Model.Name" 
-                                        For="@(() => Model.Name)"
+                                        Label="Error Message"
+                                        @bind-Value="Model.ErrorMessage" 
+                                        For="@(() => Model.ErrorMessage)"
+                                        Variant="Variant.Filled"
+                                    />
+                                }
+                            </MudItem>
+                            <MudItem md="6" xs="12">
+                                @if (Loading)
+                                {
+                                    <MudSkeleton />
+                                    <MudSkeleton />
+                                }
+                                else
+                                {
+                                    <MudNumericField  
+                                        Label="Value"
+                                        @bind-Value="Model.ErrorValue"
+                                        For="@(() => Model.ErrorValue)"
                                         Variant="Variant.Filled"
                                     />
                                 }
@@ -53,11 +70,16 @@
                                 }
                                 else 
                                 {
-                                    <MudNumericField  
-                                        Label="Value"
-                                        @bind-Value="Model.OptionValue"
-                                        For="@(() => Model.OptionValue)"
+                                    <MudAutocomplete 
+                                        T="int?"
+                                        Label="Recovery Sequence"
+                                        SearchFunc="SeqSearch"
+                                        ToStringFunc="SeqIdToString"
+                                        @bind-Value="Model.SequenceId"
+                                        For="@(() => Model.SequenceId)"
                                         Variant="Variant.Filled"
+                                        Clearable="true"
+                                        OnClearButtonClick="ClearSeq"
                                     />
                                 }
                             </MudItem>
@@ -70,11 +92,11 @@
                                 else
                                 {
                                     <MudCheckBox 
-                                        @bind-Value="Model.IsActive"
-                                        Label="Is Active"
+                                        @bind-Value="Model.Recoverable"
+                                        Label="Recoverable"
                                         Size="Size.Small"
                                         Color="Color.Secondary"
-                                        For=@(() => Model.IsActive)
+                                        For=@(() => Model.Recoverable)
                                     />
                                 }
                             </MudItem>
@@ -121,15 +143,29 @@
 @code {
     public MudForm Form { get; set; }
 
-    public OptionModel Model { get; set; } = new OptionModel();
+    public ErrorTypeModel Model { get; set; } = new ErrorTypeModel();
+
+    public List<SequenceModel> Sequences { get; set; } = new List<SequenceModel>();
 
     [Parameter]
     public int ModuleId { get; set; }
     [Parameter]
-    public int OptId { get; set; }
-
+    public int ErrorTypeId { get; set; }
 
     public bool Loading { get; set; } = true;
+
+    public string SeqIdToString(int? s) => Sequences.FirstOrDefault(v => v.SequenceId == s)?.Name ?? "";
+
+    public void ClearSeq() => Model.SequenceId = null;
+
+    private async Task<IEnumerable<int?>> SeqSearch(string value)
+    {
+        // if text is null or empty, show complete list
+        if (string.IsNullOrEmpty(value))
+            return Sequences.Select(x => x.SequenceId as int?);
+        return Sequences.Where(x => x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase))
+            .Select(x => x.SequenceId as int?);
+    }
 
     private async Task OnValidSubmit(EditContext context)
     {
@@ -141,14 +177,14 @@
         }
         try
         {
-            await OptionService.UpdateOption(Model);
-            Snackbar.Add("Successfully updated option. ", Severity.Success);
+            await ErrorTypeService.UpdateErrorType(Model);
+            Snackbar.Add("Successfully saved error type. ", Severity.Success);
             Navigation.NavigateTo($"/Module/{ModuleId}");
         }
-        catch (ObjectNotFoundException)
+        catch (ObjectNotFoundException ex)
         {
-            Snackbar.Add("Strange, looks like this option has been deleted. ", Severity.Error);
-            Navigation.NavigateTo($"/Module/{ModuleId}");
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+            return;
         }
         catch
         {
@@ -160,17 +196,17 @@
     {
         try
         {
-            Model = await OptionService.GetOption(new OptionModel { ModuleId = ModuleId, OptionId = OptId });
+            Model = await ErrorTypeService.GetErrorType(new ErrorTypeModel
+                { ModuleId = ModuleId, ErrorTypeId = ErrorTypeId });
+            Sequences = await SequenceService.GetSequences();
         }
         catch (ObjectNotFoundException)
         {
-            Snackbar.Add("That's weird, we can't find this option. ", Severity.Error);
-            Navigation.NavigateTo($"/Module/{ModuleId}");
-            return;
+            Snackbar.Add($"Can't find error type Id {ErrorTypeId} on module Id {ModuleId}. ", Severity.Error);
         }
         catch
         {
-            Snackbar.Add("Something went really wrong there, go yell at Jason. ", Severity.Error);
+            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
         }
         finally
         {

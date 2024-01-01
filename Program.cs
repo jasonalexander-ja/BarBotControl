@@ -45,6 +45,12 @@ builder.Services.AddScoped<OptionService>();
 builder.Services.AddScoped<ErrorTypeDataService>();
 builder.Services.AddScoped<ErrorTypeService>();
 
+builder.Services.AddScoped<SequenceDataService>();
+builder.Services.AddScoped<SequenceService>();
+
+builder.Services.AddScoped<SequenceItemDataService>();
+builder.Services.AddScoped<SequenceItemService>();
+
 
 
 

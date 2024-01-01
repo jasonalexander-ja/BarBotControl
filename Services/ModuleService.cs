@@ -10,10 +10,14 @@ namespace BarBotControl.Services;
 public class ModuleService
 {
     private ModuleDataService ModuleDataService;
+    private OptionDataService OptionDataService;
+    private ErrorTypeDataService ErrorTypeDataService;
 
-    public ModuleService(ModuleDataService moduleDataService) 
+    public ModuleService(ModuleDataService moduleDataService, OptionDataService optionDataService, ErrorTypeDataService errorTypeDataService) 
     { 
         ModuleDataService = moduleDataService;
+        OptionDataService = optionDataService;
+        ErrorTypeDataService = errorTypeDataService;
     }
 
     public async Task<ModuleModel> CreateModule(ModuleModel model)
@@ -49,10 +53,19 @@ public class ModuleService
         return resultModel;
     }
 
+    public async Task<List<ModuleModel>> GetActiveModulesWithOptions()
+    {
+        var result = await ModuleDataService.GetActiveModulesWithOptions();
+        var resultModels = result.Select(s => new ModuleModel(s, s.Options)).ToList();
+        return resultModels;
+    }
+
     public async Task<ModuleModel> GetModuleWithRelatedData(int id)
     {
-        var result = await ModuleDataService.GetModuleWithRelatedData(id);
-        var resultModel = new ModuleModel(result);
+        var result = await ModuleDataService.GetModule(id);
+        var opts = await OptionDataService.GetOptionsForModule(result.ModuleId);
+        var errTypes = await ErrorTypeDataService.GetErrorTypesForModule(result.ModuleId);
+        var resultModel = new ModuleModel(result, opts, errTypes);
         return resultModel;
     }
 

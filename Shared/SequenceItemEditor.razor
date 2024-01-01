@@ -1,0 +1,25 @@
+﻿<MudDropContainer 
+    T="SequenceItemModel" 
+    Items="SequenceItems" 
+    Class="d-flex flex-wrap flex-grow-1"
+    ItemsSelector="@((item,dropzone) => true)"
+    
+>
+    <ChildContent>
+        <MudDropZone T="SequenceItemModel" Identifier="1" Class="rounded mud-background-gray pa-6 ma-8 flex-grow-1" AllowReorder="true">
+        </MudDropZone>
+    </ChildContent>
+    <ItemRenderer>
+        <MudPaper Elevation="25" Class="pa-4 my-4">@context.Module.Name</MudPaper>
+    </ItemRenderer>
+</MudDropContainer>
+
+@code {
+
+    [Parameter]
+    public List<SequenceItemModel> SequenceItems { get; set; } = new List<SequenceItemModel>();
+    [Parameter]
+    public EventCallback<List<SequenceItemModel>> SequenceItemsChanged { get; set; }
+
+
+}

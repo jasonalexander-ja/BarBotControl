@@ -1,5 +1,5 @@
 ﻿@inherits AuthedPageBase
-@page "/Module/{ModuleId}"
+@page "/Module/{ModuleId:int}"
 
 @inject ModuleService ModuleService
 @inject OptionService OptionService
@@ -63,7 +63,7 @@
                                     />
                                 }
                             </MudItem>
-                            <MudItem md="6" xs="12">
+                            <MudItem md="6" xs="12" Class="d-flex align-center">
                                 @if (Loading)
                                 {
                                     <MudSkeleton />
@@ -118,13 +118,11 @@
     </EditForm>
 </MudForm>
 
-
 <MudGrid Justify="Justify.Center" Class="py-2">
     <MudItem xs="12" sm="7">
         <MudDivider />
     </MudItem>
 </MudGrid>
-
 
 <MudGrid Justify="Justify.Center">
     <MudItem xs="12" sm="7">
@@ -156,20 +154,15 @@
     public ModuleModel Model { get; set; } = new ModuleModel();
 
     [Parameter]
-    public string ModuleId { get; set; } = string.Empty;
+    public int ModuleId { get; set; }
+
     public bool Loading { get; set; } = true;
 
     protected override async Task GetData()
     {
-        if (!int.TryParse(ModuleId, out var moduleId))
-        {
-            Snackbar.Add("Incorect module Id. ", Severity.Warning);
-            Navigation.NavigateTo("/Modules");
-            return;
-        }
         try
         {
-            Model = await ModuleService.GetModuleWithRelatedData(moduleId);
+            Model = await ModuleService.GetModuleWithRelatedData(ModuleId);
         }
         catch (ObjectNotFoundException)
         {

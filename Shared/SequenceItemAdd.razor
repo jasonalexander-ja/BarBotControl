@@ -1,0 +1,123 @@
+﻿@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+
+<MudGrid Class="pb-2" Justify="Justify.Center">
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardContent>
+                <MudGrid Spacing="1">
+                    <MudItem md="6" xs="12">
+                        <MudAutocomplete 
+                            T="ModuleModel"
+                            Label="Module"
+                            SearchFunc="ModuleSearch"
+                            ToStringFunc="m => m?.Name ?? string.Empty"
+                            @bind-Value="Module"
+                            Variant="Variant.Filled"
+                            Clearable="true"
+                            OnClearButtonClick="ClearModule"
+                        />
+                    </MudItem>
+                    <MudItem md="6" xs="12">
+                        <MudAutocomplete 
+                            T="OptionModel"
+                            Label="Option"
+                            SearchFunc="OptionSearch"
+                            ToStringFunc="m => m?.Name ?? string.Empty"
+                            @bind-Value="Option"
+                            Variant="Variant.Filled"
+                            Clearable="true"
+                            OnClearButtonClick="ClearOption"
+                            Disabled="Module == null"
+                        />
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+<MudGrid Class="pb-2" Justify="Justify.Center">
+    <MudItem xs="12">
+        <MudGrid Justify="Justify.FlexStart" Spacing="1">
+            <MudItem sm="6" xs="12">
+                <MudButton 
+                    Variant="Variant.Filled" 
+                    aria-label="Save edit"
+                    Color="Color.Primary"
+                    OnClick="AddItem"
+                    DisableElevation="true" 
+                    FullWidth="true"
+                >
+                    Add Item
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudItem>
+</MudGrid>
+
+
+@code {
+
+    [Parameter]
+    public List<ModuleModel> Modules { get; set; } = new List<ModuleModel>();
+    [Parameter]
+    public EventCallback<List<ModuleModel>> ModulesChanged { get; set; }
+
+    [Parameter]
+    public List<SequenceItemModel> SequenceItems { get; set; } = new List<SequenceItemModel>();
+    [Parameter]
+    public EventCallback<List<SequenceItemModel>> SequenceItemsChanged { get; set; }
+
+    public ModuleModel? Module { get; set; }
+    public OptionModel? Option { get; set; }
+
+    public IEnumerable<OptionModel> OptionsList
+    {
+        get => Module?.Options ?? new List<OptionModel>();
+    }
+
+    public async Task AddItem()
+    {
+        if (Module is null || Option is null)
+        {
+            Snackbar.Add("Please select a module and option. ");
+            return;
+        }
+        int index = SequenceItems.Any() ? SequenceItems.Max(m => m.Index) : 0;
+        index += 10;
+        var item = new SequenceItemModel
+        {
+            Module = Module,
+            Option = Option,
+            ModuleId = Module.ModuleId,
+            OptionId = Option.OptionId,
+            Index = index
+        };
+        SequenceItems.Add(item);
+        await SequenceItemsChanged.InvokeAsync(SequenceItems);
+        StateHasChanged();
+    }
+
+    public void ClearModule() 
+    {
+        Module = null;
+        Option = null;
+    }
+    private async Task<IEnumerable<ModuleModel>> ModuleSearch(string value)
+    {
+        // if text is null or empty, show complete list
+        if (string.IsNullOrEmpty(value))
+            return Modules;
+        return Modules.Where(x => x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    public void ClearOption() => Option = null;
+    private async Task<IEnumerable<OptionModel>> OptionSearch(string value)
+    {
+        // if text is null or empty, show complete list
+        if (string.IsNullOrEmpty(value))
+            return OptionsList;
+        return OptionsList.Where(x => x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+    }
+}

@@ -1,0 +1,210 @@
+﻿@using BarBotControl.Exceptions.SudoUser
+@inherits AuthedPageBase
+@page "/Sequence/{SequenceId:int}"
+
+@inject SequenceService SequenceService
+@inject ModuleService ModuleService
+@inject SequenceItemService SequenceItemService
+@inject OptionService OptionService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<MudGrid>
+    <MudItem md="6" xs="12">
+
+        <MudGrid Class="pb-2" Spacing="0" Justify="Justify.Center">
+            <MudItem xs="12">
+                <MudText Typo="Typo.h6" Class="d-flex align-center px-1">
+                    <MudIconButton 
+                        Icon="@Icons.Material.Filled.ArrowBack"
+                        aria-label="Go Back"
+                        OnClick=@(() => Navigation.NavigateTo("/Sequences"))
+                        Size="Size.Medium"
+                        Color="Color.Secondary"
+                    />
+                    Edit Sequence
+                </MudText>
+            </MudItem>
+        </MudGrid>
+
+        <MudForm @ref="Form">
+            <EditForm Model="@Model" OnValidSubmit="OnValidSubmit">
+                <MudGrid Class="pb-2" Justify="Justify.Center">
+                    <MudItem xs="12">
+                        <MudCard>
+                            <MudCardContent>
+                                <MudGrid Spacing="1">
+                                    <MudItem xs="12">
+                                        @if (Loading)
+                                        {
+                                            <MudSkeleton />
+                                            <MudSkeleton />
+                                        }
+                                        else
+                                        {
+                                            <MudTextField 
+                                                T="string" 
+                                                Label="Name" 
+                                                @bind-Value="Model.Name" 
+                                                For=@(() => Model.Name)
+                                                Variant="Variant.Filled"
+                                            />
+                                        }
+                                    </MudItem>
+                                    <MudItem xs="12">
+                                        @if (Loading)
+                                        {
+                                            <MudSkeleton />
+                                            <MudSkeleton />
+                                        }
+                                        else
+                                        {
+                                            <MudTextField 
+                                                T="string" 
+                                                Label="Description" 
+                                                Required="true"
+                                                Lines="3"
+                                                @bind-Value="Model.Description" 
+                                                For=@(() => Model.Description)
+                                                Variant="Variant.Filled"
+                                            />
+                                        }
+                                    </MudItem>
+                                </MudGrid>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                </MudGrid>
+                <MudGrid Class="pb-2" Justify="Justify.Center">
+                    <MudItem xs="12">
+                        <MudGrid Justify="Justify.FlexStart" Spacing="1">
+                            <MudItem sm="6" xs="12">
+                                <MudButton 
+                                    Variant="Variant.Filled" 
+                                    aria-label="Save edit"
+                                    Color="Color.Primary"
+                                    ButtonType="ButtonType.Submit"
+                                    DisableElevation="true" 
+                                    FullWidth="true"
+                                >
+                                    Save
+                                </MudButton>
+                            </MudItem>
+                            <MudItem sm="6" xs="12">
+                                <MudButton 
+                                    Variant="Variant.Filled" 
+                                    Color="Color.Secondary"
+                                    aria-label="Go Back"
+                                    OnClick=@(() => Navigation.NavigateTo("/Sequences"))
+                                    DisableElevation="true" 
+                                    FullWidth="true"
+                                >
+                                    Back 
+                                </MudButton>
+                            </MudItem>
+                        </MudGrid>
+                    </MudItem>
+                </MudGrid>
+            </EditForm>
+        </MudForm>
+        <MudGrid Justify="Justify.Center" Class="pb-2">
+            <MudItem xs="12">
+                <MudDivider />
+            </MudItem>
+        </MudGrid>
+        <MudGrid Class="pb-2" Spacing="0" Justify="Justify.Center">
+            <MudItem xs="12">
+                <MudText Typo="Typo.subtitle1" Class="d-flex align-center px-1">
+                    Add Sequence Item
+                </MudText>
+            </MudItem>
+        </MudGrid>
+        <SequenceItemAdd
+            @bind-Modules="@Modules"
+            @bind-SequenceItems="@SequenceItems"
+        />
+    </MudItem>
+
+    <MudItem md="6" xs="12">
+@*         <SequenceItemEditor
+            @bind-SequenceItems="SequenceItems"
+        /> *@
+        <MudDropContainer 
+            T="SequenceItemModel" 
+            Items="SequenceItems" 
+            Class="d-flex flex-wrap flex-grow-1"
+            ItemsSelector="@((item,dropzone) => true)"
+    
+        >
+            <ChildContent>
+                <MudDropZone T="SequenceItemModel" Identifier="1" Class="rounded mud-background-gray pa-6 ma-8 flex-grow-1" AllowReorder="true">
+                </MudDropZone>
+            </ChildContent>
+            <ItemRenderer>
+                <MudPaper Elevation="25" Class="pa-4 my-4">@context.Module.Name</MudPaper>
+            </ItemRenderer>
+        </MudDropContainer>
+    </MudItem>
+</MudGrid>
+
+
+@code {
+    MudForm Form;
+    public SequenceModel Model { get; set; } = new SequenceModel();
+    public List<ModuleModel> Modules { get; set; } = new List<ModuleModel>();
+
+    public List<SequenceItemModel> SequenceItems
+    {
+        get => Model.SequenceItems.ToList();
+        set => Model.SequenceItems = value;
+    }
+
+    [Parameter]
+    public int SequenceId { get; set; }
+
+    public bool Loading { get; set; } = true;
+
+    private async Task OnValidSubmit(EditContext context)
+    {
+        await Form.Validate();
+        if (!Form.IsValid)
+        {
+            Snackbar.Add("Ensure all fields are correctly filled out. ", Severity.Warning);
+            return;
+        }
+        try
+        {
+            var newSequence = await SequenceService.UpdateSequence(Model);
+            Snackbar.Add("Sequence saved. ", Severity.Success);
+            Navigation.NavigateTo($"/Sequences");
+        }
+        catch
+        {
+            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+        }
+    }
+
+    protected override async Task GetData()
+    {
+        try
+        {
+            Model = await SequenceService.GetSequenceWithItems(SequenceId);
+            Modules = await ModuleService.GetActiveModulesWithOptions();
+        }
+        catch (ObjectNotFoundException)
+        {
+            Snackbar.Add("That's weird, we can't find this sequence. ", Severity.Error);
+            Navigation.NavigateTo("/Sequences");
+            return;
+        }
+        catch
+        {
+            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+        }
+        finally
+        {
+            Loading = false;
+            StateHasChanged();
+        }
+    }
+}

@@ -31,21 +31,74 @@
                     <MudCardContent>
                         <MudGrid Spacing="1">
                             <MudItem md="6" xs="12">
-                                <MudTextField 
-                                    Label="Error Message"
-                                    @bind-Value="Model.ErrorMessage" 
-                                    For="@(() => Model.ErrorMessage)"
-                                    Variant="Variant.Filled"
-                                />
+                                @if (Loading)
+                                {
+                                    <MudSkeleton />
+                                    <MudSkeleton />
+                                }
+                                else 
+                                {
+                                    <MudTextField 
+                                        Label="Error Message"
+                                        @bind-Value="Model.ErrorMessage" 
+                                        For="@(() => Model.ErrorMessage)"
+                                        Variant="Variant.Filled"
+                                    />
+                                }
                             </MudItem>
                             <MudItem md="6" xs="12">
-                                <MudCheckBox 
-                                    @bind-Value="Model.Recoverable"
-                                    Label="Is Active"
-                                    Size="Size.Small"
-                                    Color="Color.Secondary"
-                                    For=@(() => Model.Recoverable)
-                                />
+                                @if (Loading)
+                                {
+                                    <MudSkeleton />
+                                    <MudSkeleton />
+                                }
+                                else
+                                {
+                                    <MudNumericField  
+                                        Label="Value"
+                                        @bind-Value="Model.ErrorValue"
+                                        For="@(() => Model.ErrorValue)"
+                                        Variant="Variant.Filled"
+                                    />
+                                }
+                            </MudItem>
+                            <MudItem md="6" xs="12">
+                                @if (Loading)
+                                {
+                                    <MudSkeleton />
+                                    <MudSkeleton />
+                                }
+                                else 
+                                {
+                                    <MudAutocomplete 
+                                        T="int?"
+                                        Label="Recovery Sequence"
+                                        SearchFunc="SeqSearch"
+                                        ToStringFunc="SeqIdToString"
+                                        @bind-Value="Model.SequenceId"
+                                        For="@(() => Model.SequenceId)"
+                                        Variant="Variant.Filled"
+                                        Clearable="true"
+                                        OnClearButtonClick="ClearSeq"
+                                    />
+                                }
+                            </MudItem>
+                            <MudItem md="6" xs="12" Class="d-flex align-center">
+                                @if (Loading)
+                                {
+                                    <MudSkeleton />
+                                    <MudSkeleton />
+                                }
+                                else
+                                {
+                                    <MudCheckBox 
+                                        @bind-Value="Model.Recoverable"
+                                        Label="Recoverable"
+                                        Size="Size.Small"
+                                        Color="Color.Secondary"
+                                        For=@(() => Model.Recoverable)
+                                    />
+                                }
                             </MudItem>
                         </MudGrid>
                     </MudCardContent>
@@ -98,6 +151,21 @@
     public string ModuleIdStr { get; set; } = string.Empty;
     public int ModuleId { get; set; }
 
+    public bool Loading { get; set; } = true;
+
+    public string SeqIdToString(int? s) => Sequences.FirstOrDefault(v => v.SequenceId == s)?.Name ?? "";
+
+    public void ClearSeq() => Model.SequenceId = null;
+
+    private async Task<IEnumerable<int?>> SeqSearch(string value)
+    {
+        // if text is null or empty, show complete list
+        if (string.IsNullOrEmpty(value))
+            return Sequences.Select(x => x.SequenceId as int?);
+        return Sequences.Where(x => x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase))
+            .Select(x => x.SequenceId as int?);
+    }
+
     private async Task OnValidSubmit(EditContext context)
     {
         await Form.Validate();
@@ -113,10 +181,10 @@
             Snackbar.Add("Successfully saved error type. ", Severity.Success);
             Navigation.NavigateTo($"/Module/{ModuleId}");
         }
-        catch (ObjectNotFoundException)
+        catch (ObjectNotFoundException ex)
         {
-            Snackbar.Add("Strange, looks like this error type has been deleted. ", Severity.Error);
-            Navigation.NavigateTo($"/Module/{ModuleId}");
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+            return;
         }
         catch
         {
@@ -140,6 +208,11 @@
         catch
         {
             Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+        }
+        finally
+        {
+            Loading = false;
+            StateHasChanged();
         }
     }
 }

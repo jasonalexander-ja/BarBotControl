@@ -42,6 +42,14 @@ public class ModuleDataService
         return result;
     }
 
+    public async Task<List<Module>> GetActiveModulesWithOptions()
+    {
+        return await Context.Modules
+            .Where(m => m.IsActive == true)
+            .Include(m => m.Options.Where(o => o.IsActive == true))
+            .ToListAsync();
+    }
+
     public async Task<Module> GetModuleWithRelatedData(int id)
     {
         var result = await Context.Modules

@@ -3,43 +3,43 @@
 
 namespace BarBotControl.Services;
 
-public class SequenceService
+public class OptionService
 {
-    private readonly SequenceDataService SequenceDataService;
+    private readonly OptionDataService OptionDataService;
 
-    public SequenceService(SequenceDataService sequenceDataService)
+    public OptionService(OptionDataService optionDataService)
     {
-        SequenceDataService = sequenceDataService;
+        OptionDataService = optionDataService;
     }
 
-    public async Task<SequenceModel> AddSequence(SequenceModel seq)
+    public async Task<OptionModel> AddOption(OptionModel opt)
     {
-        return new SequenceModel(await SequenceDataService.AddSequence(seq));
+        return new OptionModel(await OptionDataService.AddOption(opt));
     }
 
-    public async Task<SequenceModel> GetSequence(int seqId)
+    public async Task<OptionModel> GetOption(OptionModel opt)
     {
-        return new SequenceModel(await SequenceDataService.GetSequence(seqId));
+        return new OptionModel(await OptionDataService.GetOption(opt));
     }
 
-    public async Task<List<SequenceModel>> GetSequences()
+    public async Task<List<OptionModel>> GetOptionsForModule(int moduleId)
     {
-        var models = await SequenceDataService.GetSequences();
-        return models.Select(s => new SequenceModel(s)).ToList();
+        var models = await OptionDataService.GetOptionsForModule(moduleId);
+        return models.Select(o => new OptionModel(o)).ToList();
     }
 
-    public async Task<SequenceModel> UpdateSequence(SequenceModel seq)
+    public async Task<OptionModel> UpdateOption(OptionModel opt)
     {
-        return new SequenceModel(await SequenceDataService.UpdateSequence(seq));
+        return new OptionModel(await OptionDataService.UpdateOption(opt));
     }
 
-    public async Task DeleteSequence(SequenceModel seq)
+    public async Task DeleteOption(OptionModel opt)
     {
-        await SequenceDataService.DeleteSequence(seq);
+        await OptionDataService.DeleteOption(opt);
     }
 
-    public async Task DeleteSequence(IEnumerable<SequenceModel> seqs)
+    public async Task DeleteOptions(IEnumerable<OptionModel> opts)
     {
-        await SequenceDataService.DeleteSequences(seqs);
+        await OptionDataService.DeleteOptions(opts);
     }
 }

@@ -15,14 +15,18 @@ public class ModuleModel
     public IEnumerable<ErrorTypeModel> ErrorTypes { get; set; } = new List<ErrorTypeModel>();
 
     public ModuleModel() { }
-    public ModuleModel(Module model)
+    public ModuleModel(
+        Module model, 
+        IEnumerable<Option>? options = null, 
+        IEnumerable<ErrorType>? errTypes = null,
+        IEnumerable<SequenceItem>? seqItems = null)
     {
         ModuleId = model.ModuleId;
         Channel = model.Channel;
         Name = model.Name;
         IsActive = model.IsActive;
-        Options = model.Options.Select(o => new OptionModel(o)).ToList();
-        SequenceItems = model.SequenceItems.Select(o => new SequenceItemModel(o)).ToList();
-        ErrorTypes = model.ErrorTypes.Select(o => new ErrorTypeModel(o)).ToList();
+        Options = options?.Select(s => new OptionModel(s)) ?? new List<OptionModel>();
+        SequenceItems = seqItems?.Select(s => new SequenceItemModel(s)) ?? new List<SequenceItemModel>();
+        ErrorTypes = errTypes?.Select(s => new ErrorTypeModel(s)) ?? new List<ErrorTypeModel>();
     }
 }
