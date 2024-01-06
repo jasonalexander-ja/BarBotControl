@@ -22,6 +22,12 @@ public class OptionService
         return new OptionModel(await OptionDataService.GetOption(opt));
     }
 
+    public async Task<List<OptionModel>> GetActiveOptions()
+    {
+        var models = await OptionDataService.GetActiveOptions();
+        return models.Select(o => new OptionModel(o)).ToList();
+    }
+
     public async Task<List<OptionModel>> GetOptionsForModule(int moduleId)
     {
         var models = await OptionDataService.GetOptionsForModule(moduleId);

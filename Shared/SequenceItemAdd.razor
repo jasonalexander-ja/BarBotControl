@@ -1,9 +1,15 @@
 ﻿@inject ISnackbar Snackbar
 @inject NavigationManager Navigation
 
-
+<MudGrid Class="pb-2" Spacing="0" Justify="Justify.Center">
+    <MudItem xs="12" sm="7">
+        <MudText Typo="Typo.subtitle1" Class="d-flex align-center px-1">
+            Add Sequence Item
+        </MudText>
+    </MudItem>
+</MudGrid>
 <MudGrid Class="pb-2" Justify="Justify.Center">
-    <MudItem xs="12">
+    <MudItem xs="12" sm="7">
         <MudCard>
             <MudCardContent>
                 <MudGrid Spacing="1">
@@ -38,9 +44,9 @@
     </MudItem>
 </MudGrid>
 <MudGrid Class="pb-2" Justify="Justify.Center">
-    <MudItem xs="12">
+    <MudItem xs="12" sm="7">
         <MudGrid Justify="Justify.FlexStart" Spacing="1">
-            <MudItem sm="6" xs="12">
+            <MudItem md="4" sm="6" xs="12">
                 <MudButton 
                     Variant="Variant.Filled" 
                     aria-label="Save edit"
@@ -58,6 +64,8 @@
 
 
 @code {
+    [Parameter]
+    public SequenceItemService SequenceItemService { get; set; } = null!;
 
     [Parameter]
     public List<ModuleModel> Modules { get; set; } = new List<ModuleModel>();
@@ -69,12 +77,20 @@
     [Parameter]
     public EventCallback<List<SequenceItemModel>> SequenceItemsChanged { get; set; }
 
+    [Parameter]
+    public List<OptionModel> Options { get; set; } = new List<OptionModel>();
+    [Parameter]
+    public EventCallback<List<OptionModel>> OptionsChanged { get; set; }
+
+    [Parameter]
+    public int SequenceId { get; set; }
+
     public ModuleModel? Module { get; set; }
     public OptionModel? Option { get; set; }
 
     public IEnumerable<OptionModel> OptionsList
     {
-        get => Module?.Options ?? new List<OptionModel>();
+        get => Options.Where(o => Module != null ? o.ModuleId == Module.ModuleId : false);
     }
 
     public async Task AddItem()
@@ -88,14 +104,20 @@
         index += 10;
         var item = new SequenceItemModel
         {
-            Module = Module,
-            Option = Option,
             ModuleId = Module.ModuleId,
             OptionId = Option.OptionId,
+            SequenceId = SequenceId,
             Index = index
         };
-        SequenceItems.Add(item);
-        await SequenceItemsChanged.InvokeAsync(SequenceItems);
+        try
+        {
+            await SequenceItemService.AddSequence(item);
+            await SequenceItemsChanged.InvokeAsync(await SequenceItemService.GetItemsForSeqWithModuleOpt(SequenceId));
+        }
+        catch
+        {
+            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+        }
         StateHasChanged();
     }
 

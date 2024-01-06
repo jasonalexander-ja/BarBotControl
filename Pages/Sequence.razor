@@ -9,141 +9,140 @@
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
 
-<MudGrid>
-    <MudItem md="6" xs="12">
 
-        <MudGrid Class="pb-2" Spacing="0" Justify="Justify.Center">
-            <MudItem xs="12">
-                <MudText Typo="Typo.h6" Class="d-flex align-center px-1">
-                    <MudIconButton 
-                        Icon="@Icons.Material.Filled.ArrowBack"
-                        aria-label="Go Back"
-                        OnClick=@(() => Navigation.NavigateTo("/Sequences"))
-                        Size="Size.Medium"
-                        Color="Color.Secondary"
-                    />
-                    Edit Sequence
-                </MudText>
-            </MudItem>
-        </MudGrid>
 
-        <MudForm @ref="Form">
-            <EditForm Model="@Model" OnValidSubmit="OnValidSubmit">
-                <MudGrid Class="pb-2" Justify="Justify.Center">
-                    <MudItem xs="12">
-                        <MudCard>
-                            <MudCardContent>
-                                <MudGrid Spacing="1">
-                                    <MudItem xs="12">
-                                        @if (Loading)
-                                        {
-                                            <MudSkeleton />
-                                            <MudSkeleton />
-                                        }
-                                        else
-                                        {
-                                            <MudTextField 
-                                                T="string" 
-                                                Label="Name" 
-                                                @bind-Value="Model.Name" 
-                                                For=@(() => Model.Name)
-                                                Variant="Variant.Filled"
-                                            />
-                                        }
-                                    </MudItem>
-                                    <MudItem xs="12">
-                                        @if (Loading)
-                                        {
-                                            <MudSkeleton />
-                                            <MudSkeleton />
-                                        }
-                                        else
-                                        {
-                                            <MudTextField 
-                                                T="string" 
-                                                Label="Description" 
-                                                Required="true"
-                                                Lines="3"
-                                                @bind-Value="Model.Description" 
-                                                For=@(() => Model.Description)
-                                                Variant="Variant.Filled"
-                                            />
-                                        }
-                                    </MudItem>
-                                </MudGrid>
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-                </MudGrid>
-                <MudGrid Class="pb-2" Justify="Justify.Center">
-                    <MudItem xs="12">
-                        <MudGrid Justify="Justify.FlexStart" Spacing="1">
-                            <MudItem sm="6" xs="12">
-                                <MudButton 
-                                    Variant="Variant.Filled" 
-                                    aria-label="Save edit"
-                                    Color="Color.Primary"
-                                    ButtonType="ButtonType.Submit"
-                                    DisableElevation="true" 
-                                    FullWidth="true"
-                                >
-                                    Save
-                                </MudButton>
+<MudGrid Class="pb-2" Spacing="0" Justify="Justify.Center">
+    <MudItem xs="12" sm="7">
+        <MudText Typo="Typo.h6" Class="d-flex align-center px-1">
+            <MudIconButton 
+                Icon="@Icons.Material.Filled.ArrowBack"
+                aria-label="Go Back"
+                OnClick=@(() => Navigation.NavigateTo("/Sequences"))
+                Size="Size.Medium"
+                Color="Color.Secondary"
+            />
+            Edit Sequence
+        </MudText>
+    </MudItem>
+</MudGrid>
+
+<MudForm @ref="Form">
+    <EditForm Model="@Model" OnValidSubmit="OnValidSubmit">
+        <MudGrid Class="pb-2" Justify="Justify.Center">
+            <MudItem xs="12" sm="7">
+                <MudCard>
+                    <MudCardContent>
+                        <MudGrid Spacing="1">
+                            <MudItem xs="12">
+                                @if (Loading)
+                                {
+                                    <MudSkeleton />
+                                    <MudSkeleton />
+                                }
+                                else
+                                {
+                                    <MudTextField 
+                                        T="string" 
+                                        Label="Name" 
+                                        @bind-Value="Model.Name" 
+                                        For=@(() => Model.Name)
+                                        Variant="Variant.Filled"
+                                    />
+                                }
                             </MudItem>
-                            <MudItem sm="6" xs="12">
-                                <MudButton 
-                                    Variant="Variant.Filled" 
-                                    Color="Color.Secondary"
-                                    aria-label="Go Back"
-                                    OnClick=@(() => Navigation.NavigateTo("/Sequences"))
-                                    DisableElevation="true" 
-                                    FullWidth="true"
-                                >
-                                    Back 
-                                </MudButton>
+                            <MudItem xs="12">
+                                @if (Loading)
+                                {
+                                    <MudSkeleton />
+                                    <MudSkeleton />
+                                }
+                                else
+                                {
+                                    <MudTextField 
+                                        T="string" 
+                                        Label="Description" 
+                                        Required="true"
+                                        Lines="3"
+                                        @bind-Value="Model.Description" 
+                                        For=@(() => Model.Description)
+                                        Variant="Variant.Filled"
+                                    />
+                                }
                             </MudItem>
                         </MudGrid>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+        <MudGrid Class="pb-2" Justify="Justify.Center">
+            <MudItem xs="12" sm="7">
+                <MudGrid Justify="Justify.FlexStart" Spacing="1">
+                    <MudItem md="4" sm="6" xs="12">
+                        <MudButton 
+                            Variant="Variant.Filled" 
+                            aria-label="Save edit"
+                            Color="Color.Primary"
+                            ButtonType="ButtonType.Submit"
+                            DisableElevation="true" 
+                            FullWidth="true"
+                        >
+                            Save
+                        </MudButton>
+                    </MudItem>
+                    <MudItem md="4" sm="6" xs="12">
+                        <MudButton 
+                            Variant="Variant.Filled" 
+                            Color="Color.Secondary"
+                            aria-label="Go Back"
+                            OnClick=@(() => Navigation.NavigateTo("/Sequences"))
+                            DisableElevation="true" 
+                            FullWidth="true"
+                        >
+                            Back 
+                        </MudButton>
                     </MudItem>
                 </MudGrid>
-            </EditForm>
-        </MudForm>
-        <MudGrid Justify="Justify.Center" Class="pb-2">
-            <MudItem xs="12">
-                <MudDivider />
             </MudItem>
         </MudGrid>
-        <MudGrid Class="pb-2" Spacing="0" Justify="Justify.Center">
-            <MudItem xs="12">
-                <MudText Typo="Typo.subtitle1" Class="d-flex align-center px-1">
-                    Add Sequence Item
-                </MudText>
-            </MudItem>
-        </MudGrid>
-        <SequenceItemAdd
-            @bind-Modules="@Modules"
-            @bind-SequenceItems="@SequenceItems"
-        />
+    </EditForm>
+</MudForm>
+<MudGrid Justify="Justify.Center" Class="pb-2">
+    <MudItem xs="12" sm="7">
+        <MudDivider />
     </MudItem>
-
-    <MudItem md="6" xs="12">
-@*         <SequenceItemEditor
-            @bind-SequenceItems="SequenceItems"
-        /> *@
-        <MudDropContainer 
-            T="SequenceItemModel" 
-            Items="SequenceItems" 
-            Class="d-flex flex-wrap flex-grow-1"
-            ItemsSelector="@((item,dropzone) => true)"
-    
-        >
-            <ChildContent>
-                <MudDropZone T="SequenceItemModel" Identifier="1" Class="rounded mud-background-gray pa-6 ma-8 flex-grow-1" AllowReorder="true">
-                </MudDropZone>
-            </ChildContent>
-            <ItemRenderer>
-                <MudPaper Elevation="25" Class="pa-4 my-4">@context.Module.Name</MudPaper>
-            </ItemRenderer>
-        </MudDropContainer>
+</MudGrid>
+<SequenceItemAdd
+    @bind-Modules="@Modules"
+    @bind-Options="@Options"
+    @bind-SequenceItems="@SequenceItems"
+    SequenceItemService="SequenceItemService"
+    SequenceId="SequenceId"
+/>
+<MudGrid Class="py-2" Spacing="0" Justify="Justify.Center">
+    <MudItem xs="12" sm="6" lg="4" Class="d-flex flex-column gap-3">
+        @foreach (var (item, index) in SequenceItems.OrderBy(v => v.Index).Select((i, v) => (i, v)))
+        {
+            <MudCard>
+                <MudCardContent Class="pb-1">
+                    <MudText>@item.Module.Name #@index</MudText>
+                    <MudText Typo="Typo.body2">@item.Option.Name</MudText>
+                </MudCardContent>
+                <MudCardActions Class="d-flex justify-space-between pt-0">
+                    <MudIconButton 
+                        OnClick="() => MoveDown(item)" 
+                        Icon="@Icons.Material.Filled.ArrowUpward"
+                        Disabled="index == 0"
+                        aria-label="Move Up" 
+                    />
+                    <MudIconButton 
+                        OnClick="() => MoveUp(item)" 
+                        Icon="@Icons.Material.Filled.ArrowDownward" 
+                        Disabled=@(index + 1 == SequenceItems.Count())
+                        aria-label="Move Down" 
+                    />
+                </MudCardActions>
+            </MudCard>
+        }
     </MudItem>
 </MudGrid>
 
@@ -151,18 +150,55 @@
 @code {
     MudForm Form;
     public SequenceModel Model { get; set; } = new SequenceModel();
+    public List<SequenceItemModel> SequenceItems { get; set; } = new List<SequenceItemModel>();
     public List<ModuleModel> Modules { get; set; } = new List<ModuleModel>();
-
-    public List<SequenceItemModel> SequenceItems
-    {
-        get => Model.SequenceItems.ToList();
-        set => Model.SequenceItems = value;
-    }
+    public List<OptionModel> Options { get; set; } = new List<OptionModel>();
 
     [Parameter]
     public int SequenceId { get; set; }
 
     public bool Loading { get; set; } = true;
+
+    public async Task MoveUp(SequenceItemModel item)
+    {
+        var sortedItem = SequenceItems.OrderBy(u => u.Index).ToList();
+        var index = sortedItem.IndexOf(item);
+
+        if (index + 1 == sortedItem.Count()) return;
+
+        var nextUp = sortedItem[index + 1];
+        await SwapSaveIndexes(item, nextUp);
+    }
+
+    public async Task MoveDown(SequenceItemModel item)
+    {
+        var sortedItem = SequenceItems.OrderBy(u => u.Index).ToList();
+        var index = sortedItem.IndexOf(item);
+
+        if (index == 0) return;
+
+        var nextLower = sortedItem[index - 1];
+        await SwapSaveIndexes(item, nextLower);
+    }
+
+    public async Task SwapSaveIndexes(SequenceItemModel item1, SequenceItemModel item2)
+    {
+        var item1Index = item1.Index;
+        var item2Index = item2.Index;
+        item1.Index = item2Index;
+        item2.Index = item1Index;
+        try 
+        {
+            await SequenceItemService.UpdateSequence(item1);
+            await SequenceItemService.UpdateSequence(item2);
+            SequenceItems = await SequenceItemService.GetItemsForSeqWithModuleOpt(SequenceId);
+            StateHasChanged();
+        }
+        catch
+        {
+            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+        }
+    }
 
     private async Task OnValidSubmit(EditContext context)
     {
@@ -189,7 +225,9 @@
         try
         {
             Model = await SequenceService.GetSequenceWithItems(SequenceId);
-            Modules = await ModuleService.GetActiveModulesWithOptions();
+            SequenceItems = await SequenceItemService.GetItemsForSeqWithModuleOpt(SequenceId);
+            Modules = await ModuleService.GetActiveModules();
+            Options = await OptionService.GetActiveOptions();
         }
         catch (ObjectNotFoundException)
         {

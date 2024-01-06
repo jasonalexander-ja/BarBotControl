@@ -68,6 +68,11 @@ public class ModuleDataService
         return await Context.Modules.ToListAsync();
     }
 
+    public async Task<List<Module>> GetActiveModules()
+    {
+        return await Context.Modules.Where(m => m.IsActive).ToListAsync();
+    }
+
     public async Task<Module> UpdateModule(ModuleModel module)
     {
         var model = await GetModule(module.ModuleId);

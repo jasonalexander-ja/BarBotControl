@@ -1,5 +1,5 @@
 ﻿@inherits AuthedPageBase
-@page "/Module/{ModuleId:int}/ErrorType/{ErrorType:int}"
+@page "/Module/{ModuleIdStr}/ErrorType/{ErrorTypeIdStr}"
 
 @inject ErrorTypeService ErrorTypeService
 @inject SequenceService SequenceService
@@ -148,8 +148,10 @@
     public List<SequenceModel> Sequences { get; set; } = new List<SequenceModel>();
 
     [Parameter]
+    public string ModuleIdStr { get; set; } = string.Empty;
     public int ModuleId { get; set; }
     [Parameter]
+    public string ErrorTypeIdStr { get; set; } = string.Empty;
     public int ErrorTypeId { get; set; }
 
     public bool Loading { get; set; } = true;
@@ -194,6 +196,20 @@
 
     protected override async Task GetData()
     {
+        if (!int.TryParse(ModuleIdStr, out var modId))
+        {
+            Snackbar.Add("Incorrect formatted module Id. ", Severity.Warning);
+            Navigation.NavigateTo($"/Modules");
+            return;
+        }
+        if (!int.TryParse(ErrorTypeIdStr, out var errTypeId))
+        {
+            Snackbar.Add("Incorrect formatted error types Id. ", Severity.Warning);
+            Navigation.NavigateTo($"/Module/{modId}");
+            return;
+        }
+        ModuleId = modId;
+        ErrorTypeId = errTypeId;
         try
         {
             Model = await ErrorTypeService.GetErrorType(new ErrorTypeModel

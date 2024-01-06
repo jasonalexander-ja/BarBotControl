@@ -37,6 +37,13 @@ public class OptionDataService
         return optionModel;
     }
 
+    public async Task<List<Option>> GetActiveOptions()
+    {
+        return await Context.Options
+            .Where(opt => opt.IsActive && opt.Module.IsActive)
+            .ToListAsync();
+    }
+
     public async Task<List<Option>> GetOptionsForModule(int moduleId)
     {
         return await Context.Options.Where(opt => opt.ModuleId == moduleId).ToListAsync();

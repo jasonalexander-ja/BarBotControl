@@ -53,23 +53,13 @@ public class ModuleService
         return resultModel;
     }
 
-    public async Task<List<ModuleModel>> GetActiveModulesWithOptions()
-    {
-        var result = await ModuleDataService.GetActiveModulesWithOptions();
-        var resultModels = result.Select(s => new ModuleModel(s, s.Options)).ToList();
-        return resultModels;
-    }
-
-    public async Task<ModuleModel> GetModuleWithRelatedData(int id)
-    {
-        var result = await ModuleDataService.GetModule(id);
-        var opts = await OptionDataService.GetOptionsForModule(result.ModuleId);
-        var errTypes = await ErrorTypeDataService.GetErrorTypesForModule(result.ModuleId);
-        var resultModel = new ModuleModel(result, opts, errTypes);
-        return resultModel;
-    }
-
     public async Task<List<ModuleModel>> GetModules()
+    {
+        var result = await ModuleDataService.GetModules();
+        return result.Select(m => new ModuleModel(m)).ToList();
+    }
+
+    public async Task<List<ModuleModel>> GetActiveModules()
     {
         var result = await ModuleDataService.GetModules();
         return result.Select(m => new ModuleModel(m)).ToList();

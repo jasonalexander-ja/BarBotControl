@@ -13,7 +13,7 @@
             <MudIconButton 
                 Icon="@Icons.Material.Filled.ArrowBack"
                 aria-label="Go Back"
-                OnClick=@(() => Navigation.NavigateTo($"/Module/{ModuleIdStr}"))
+                OnClick=@(() => Navigation.NavigateTo($"/Module/{ModuleId}"))
                 Size="Size.Medium"
                 Color="Color.Secondary"
             />
@@ -125,7 +125,7 @@
                             Variant="Variant.Filled" 
                             Color="Color.Secondary"
                             aria-label="Go Back"
-                            OnClick=@(() => Navigation.NavigateTo($"/Module/{ModuleIdStr}"))
+                            OnClick=@(() => Navigation.NavigateTo($"/Module/{ModuleId}"))
                             DisableElevation="true" 
                             FullWidth="true"
                         >
@@ -148,7 +148,7 @@
     public List<SequenceModel> Sequences { get; set; } = new List<SequenceModel>();
 
     [Parameter]
-    public string ModuleIdStr { get; set; } = string.Empty;
+    public string ModuleIdStr { get; set; }
     public int ModuleId { get; set; }
 
     public bool Loading { get; set; } = true;
@@ -194,13 +194,13 @@
 
     protected override async Task GetData()
     {
-        if (!int.TryParse(ModuleIdStr, out var moduleId))
+        if (!int.TryParse(ModuleIdStr, out var modId))
         {
-            Snackbar.Add("Incorect module Id. ", Severity.Warning);
-            Navigation.NavigateTo("/Modules");
+            Snackbar.Add("Incorrect formatted module Id. ", Severity.Warning);
+            Navigation.NavigateTo($"/Modules");
             return;
         }
-        ModuleId = moduleId;
+        ModuleId = modId;
         try
         {
             Sequences = await SequenceService.GetSequences();

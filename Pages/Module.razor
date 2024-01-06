@@ -1,5 +1,5 @@
 ﻿@inherits AuthedPageBase
-@page "/Module/{ModuleId:int}"
+@page "/Module/{ModuleIdStr}"
 
 @inject ModuleService ModuleService
 @inject OptionService OptionService
@@ -129,7 +129,7 @@
         <MudTabs Elevation="2" Rounded="true" PanelClass="pa-0">
             <MudTabPanel Text="Options">
                 <OptionsView
-                    @bind-Options="Model.Options"
+                    @bind-Options="Options"
                     @bind-Loading="Loading"
                     OptionService="OptionService"
                     ModuleId="Model.ModuleId"
@@ -137,7 +137,7 @@
             </MudTabPanel>
             <MudTabPanel Text="Error Types">
                 <ErrorTypesView
-                    @bind-ErrorTypes="Model.ErrorTypes"
+                    @bind-ErrorTypes="ErrTypes"
                     @bind-Loading="Loading"
                     ErrorTypeService="ErrorTypeService"
                     ModuleId="Model.ModuleId"
@@ -152,17 +152,29 @@
 @code {
     MudForm Form;
     public ModuleModel Model { get; set; } = new ModuleModel();
+    public IEnumerable<OptionModel> Options { get; set; } = new List<OptionModel>();
+    public IEnumerable<ErrorTypeModel> ErrTypes { get; set; } = new List<ErrorTypeModel>();
 
     [Parameter]
+    public string ModuleIdStr { get; set; } = string.Empty;
     public int ModuleId { get; set; }
 
     public bool Loading { get; set; } = true;
 
     protected override async Task GetData()
     {
+        if (!int.TryParse(ModuleIdStr, out var modId))
+        {
+            Snackbar.Add("Incorrect formatted module Id. ", Severity.Warning);
+            Navigation.NavigateTo($"/Modules");
+            return;
+        }
+        ModuleId = modId;
         try
         {
-            Model = await ModuleService.GetModuleWithRelatedData(ModuleId);
+            Model = await ModuleService.GetModule(ModuleId);
+            Options = await OptionService.GetOptionsForModule(ModuleId);
+            ErrTypes = await ErrorTypeService.GetErrorTypesForModule(ModuleId);
         }
         catch (ObjectNotFoundException)
         {

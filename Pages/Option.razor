@@ -1,5 +1,5 @@
 ﻿@inherits AuthedPageBase
-@page "/Module/{ModuleId:int}/Option/{OptId:int}"
+@page "/Module/{ModuleIdStr}/Option/{OptIdStr}"
 
 @inject OptionService OptionService
 @inject ISnackbar Snackbar
@@ -124,8 +124,10 @@
     public OptionModel Model { get; set; } = new OptionModel();
 
     [Parameter]
+    public string ModuleIdStr { get; set; } = string.Empty;
     public int ModuleId { get; set; }
     [Parameter]
+    public string OptIdStr { get; set; } = string.Empty;
     public int OptId { get; set; }
 
 
@@ -158,6 +160,20 @@
 
     protected override async Task GetData()
     {
+        if (!int.TryParse(ModuleIdStr, out var modId))
+        {
+            Snackbar.Add("Incorrect formatted module Id. ", Severity.Warning);
+            Navigation.NavigateTo($"/Modules");
+            return;
+        }
+        if (!int.TryParse(OptIdStr, out var optId))
+        {
+            Snackbar.Add("Incorrect formatted option Id. ", Severity.Warning);
+            Navigation.NavigateTo($"/Module/{modId}");
+            return;
+        }
+        ModuleId = modId;
+        OptId = optId;
         try
         {
             Model = await OptionService.GetOption(new OptionModel { ModuleId = ModuleId, OptionId = OptId });

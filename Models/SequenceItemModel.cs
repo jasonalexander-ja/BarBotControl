@@ -7,8 +7,9 @@ public class SequenceItemModel
     public int Index { get; set; }
     public int ModuleId { get; set; }
     public int OptionId { get; set; }
-    public ModuleModel Module { get; set; } = new ModuleModel();
-    public OptionModel Option { get; set; } = new OptionModel();
+    public SequenceModel Sequence { get; set; } = null!;
+    public ModuleModel Module { get; set; } = null!;
+    public OptionModel Option { get; set; } = null!;
 
     public SequenceItemModel() { }
     public SequenceItemModel(SequenceItem model)
@@ -18,7 +19,8 @@ public class SequenceItemModel
         Index = model.Index;
         ModuleId = model.ModuleId;
         OptionId = model.OptionId;
-        Module = new ModuleModel(model.Module ?? new Module());
-        Option = new OptionModel(model.Option ?? new Option());
+        Sequence = new SequenceModel(model.Sequence);
+        Module = new ModuleModel(model.Module);
+        Option = new OptionModel(model.Option);
     }
 }
