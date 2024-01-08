@@ -6,10 +6,12 @@ namespace BarBotControl.Services;
 public class SequenceService
 {
     private readonly SequenceDataService SequenceDataService;
+    private readonly SequenceItemDataService SequenceItemDataService;
 
-    public SequenceService(SequenceDataService sequenceDataService)
+    public SequenceService(SequenceDataService sequenceDataService, SequenceItemDataService sequenceItemDataService)
     {
         SequenceDataService = sequenceDataService;
+        SequenceItemDataService = sequenceItemDataService;
     }
 
     public async Task<SequenceModel> AddSequence(SequenceModel seq)
@@ -28,9 +30,15 @@ public class SequenceService
         return new SequenceModel(model);
     }
 
-    public async Task<List<SequenceModel>> GetSequences()
+    public async Task<List<SequenceModel>> GetActiveSequences()
     {
-        var models = await SequenceDataService.GetSequences();
+        var models = await SequenceDataService.GetActiveSequences();
+        return models.Select(s => new SequenceModel(s)).ToList();
+    }
+
+    public async Task<List<SequenceModel>> GetInactiveSequences()
+    {
+        var models = await SequenceDataService.GetInactiveSequences();
         return models.Select(s => new SequenceModel(s)).ToList();
     }
 

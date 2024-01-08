@@ -1,0 +1,191 @@
+@inherits AuthedPageBase
+@page "/Sequence/{SequenceId:int}/ItemNew"
+
+@inject ModuleService ModuleService
+@inject SequenceItemService SequenceItemService
+@inject OptionService OptionService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Add Sequence Item</PageTitle>
+
+<MudGrid Class="pb-2" Spacing="0" Justify="Justify.Center">
+    <MudItem xs="12" sm="7">
+        <MudText Typo="Typo.h6" Class="d-flex align-center px-1">
+            <MudIconButton 
+                Icon="@Icons.Material.Filled.ArrowBack"
+                aria-label="Go Back"
+                OnClick=@(() => Navigation.NavigateTo($"/Sequence/{SequenceId}"))
+                Size="Size.Medium"
+                Color="Color.Secondary"
+            />
+            Add Sequence Item
+        </MudText>
+    </MudItem>
+</MudGrid>
+<MudForm @ref="Form">
+    <EditForm Model="@Model" OnValidSubmit="OnValidSubmit">
+        <MudGrid Class="pb-2" Justify="Justify.Center">
+            <MudItem xs="12" sm="7">
+                <MudCard>
+                    <MudCardContent>
+                        <MudGrid Spacing="1">
+                            <MudItem md="6" xs="12">
+                                @if (Loading)
+                                {
+                                    <MudSkeleton />                                    
+                                    <MudSkeleton />
+                                }
+                                else
+                                {
+                                    <MudAutocomplete
+                                        T="ModuleModel"
+                                        Label="Module"
+                                        SearchFunc="ModuleSearch"
+                                        ToStringFunc="m => m?.Name ?? string.Empty"
+                                        @bind-Value="Model.Module"
+                                        For="@(() => Model.Module)"
+                                        Variant="Variant.Filled"
+                                        Clearable="true"
+                                        OnClearButtonClick="ClearModule"
+                                    />
+                                }
+                            </MudItem>
+                            <MudItem md="6" xs="12">
+                                @if (Loading)
+                                {
+                                    <MudSkeleton />                                    
+                                    <MudSkeleton />
+                                }
+                                else
+                                {
+                                    <MudAutocomplete
+                                        T="OptionModel"
+                                        Label="Option"
+                                        SearchFunc="OptionSearch"
+                                        ToStringFunc="m => m?.Name ?? string.Empty"
+                                        @bind-Value="Model.Option"
+                                        For="@(() => Model.Option)"
+                                        Variant="Variant.Filled"
+                                        Clearable="true"
+                                        OnClearButtonClick="ClearOption"
+                                        Disabled="@(Model.Module == null || Model.Module.ModuleId == 0)"
+                                    />
+                                }
+                            </MudItem>
+                        </MudGrid>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+        <MudGrid Class="pb-2" Justify="Justify.Center">
+            <MudItem xs="12" sm="7">
+                <MudGrid Justify="Justify.FlexStart" Spacing="1">
+                    <MudItem md="4" sm="6" xs="12">
+                        <MudButton 
+                            Variant="Variant.Filled" 
+                            aria-label="Save edit"
+                            Color="Color.Primary"
+                            ButtonType="ButtonType.Submit"
+                            DisableElevation="true" 
+                            FullWidth="true"
+                        >
+                            Save 
+                        </MudButton>
+                    </MudItem>
+                    <MudItem md="4" sm="6" xs="12">
+                        <MudButton 
+                            Variant="Variant.Filled" 
+                            Color="Color.Secondary"
+                            aria-label="Go Back"
+                            OnClick=@(() => Navigation.NavigateTo($"/Sequence/{SequenceId}"))
+                            DisableElevation="true" 
+                            FullWidth="true"
+                        >
+                            Back 
+                        </MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudItem>
+        </MudGrid>
+    </EditForm>
+</MudForm>
+
+@code {
+    public MudForm Form { get; set; }
+    public SequenceItemModel Model { get; set; } = new SequenceItemModel();
+    
+    [Parameter]
+    public int SequenceId { get; set; }
+    
+    public List<OptionModel> Options { get; set; } = new List<OptionModel>();
+    public List<ModuleModel> Modules { get; set; } = new List<ModuleModel>();
+
+    public bool Loading { get; set; } = true;
+    
+    public void ClearModule() 
+    {
+        Model.Module = null;
+        Model.Option = null;
+    }
+    private async Task<IEnumerable<ModuleModel>> ModuleSearch(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return Modules;
+        return Modules.Where(x => x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    public void ClearOption() => Model.Option = null;
+    private async Task<IEnumerable<OptionModel>> OptionSearch(string value)
+    {
+        if (Model.Module is null || Model.Module.ModuleId == 0)
+            return new List<OptionModel>();
+        if (string.IsNullOrEmpty(value))
+            return Options.Where(x => x.ModuleId == Model.Module.ModuleId);
+        return Options.Where(x => 
+            x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase) &&
+            x.ModuleId == Model.Module.ModuleId);
+    }
+
+    protected override async Task GetData()
+    {
+        try
+        {
+            Modules = await ModuleService.GetActiveModules();
+            Options = await OptionService.GetActiveOptions();
+        }
+        catch
+        {
+            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+        }
+        finally
+        {
+            Loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnValidSubmit(EditContext context)
+    {
+        await Form.Validate();
+        if (!Form.IsValid)
+        {
+            Snackbar.Add("Ensure all fields are correctly filled out. ", Severity.Warning);
+            return;
+        }
+        try
+        {
+            int index = await SequenceItemService.GetHighestIndexForSeq(SequenceId);
+            Model.SequenceId = SequenceId;
+            Model.ModuleId = Model.Module.ModuleId;
+            Model.OptionId = Model.Option.OptionId;
+            Model.Index = index + 10;
+            await SequenceItemService.AddSequence(Model);
+            Navigation.NavigateTo($"Sequence/{SequenceId}");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+        }
+    }
+}

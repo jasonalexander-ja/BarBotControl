@@ -5,11 +5,10 @@
 @page "/Users"
 
 @inject SudoUserService UserService
-@inject SessionService SessionService
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
-@inject IJSRuntime JS
 
+<PageTitle>Users</PageTitle>
 
 <MudGrid Class="pb-4" Spacing="0">
     <MudItem sm="6" xs="12" Class="d-flex align-end">
@@ -171,7 +170,7 @@
         }
         catch
         {
-            Snackbar.Add("Something went reallt wrong, go yell at Jason. ", Severity.Error);
+            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
         }
         finally
         {

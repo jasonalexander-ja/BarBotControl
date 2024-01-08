@@ -1,0 +1,250 @@
+﻿@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<MudGrid Class="pb-4" Spacing="0">
+    <MudItem sm="6" xs="12" Class="d-flex align-end">
+        <MudText Class="pt-2" Typo="Typo.h6">Sequence Items</MudText>
+    </MudItem>
+    <MudItem sm="6" xs="12">
+        <MudTextField 
+            @bind-Value="SearchString" 
+            Placeholder="Search" 
+            Adornment="Adornment.Start" 
+            AdornmentIcon="@Icons.Material.Filled.Search" 
+            IconSize="Size.Medium" 
+            Class="mt-0"
+        />
+    </MudItem>
+</MudGrid>
+<MudGrid>
+    <MudItem xs="12">
+        <MudTable 
+            Loading="Loading" 
+            Items="@SequenceItems.OrderBy(i => i.Index)" 
+            Hover="true" 
+            MultiSelection="true"
+            SelectOnRowClick="false"
+            Dense="true"
+            Filter="new Func<SequenceItemDescModel, bool>(Filter)" 
+            @bind-SelectedItems="SelectedItems"
+        >
+            <HeaderContent>
+                <MudTh>Index</MudTh>
+                <MudTh>Description</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Index">@context.Index</MudTd>
+                <MudTd DataLabel="Name">@context.Description</MudTd>
+                <MudTd DataLabel="Actions">
+                    <MudIconButton 
+                        Icon="@Icons.Material.Filled.ArrowUpward"
+                        aria-label="Move up"
+                        OnClick=@(() => MoveUp(context))
+                        Size="Size.Small"
+                        Color="Color.Primary"
+                        Disabled="@(SequenceItems.OrderBy(i => i.Index)
+                                      .ToList()
+                                      .IndexOf(context) == 0)"
+                    />
+                    <MudIconButton 
+                        Icon="@Icons.Material.Filled.ArrowDownward"
+                        aria-label="Move down"
+                        OnClick=@(() => MoveDown(context))
+                        Size="Size.Small"
+                        Color="Color.Secondary"
+                        Disabled="@(SequenceItems.OrderBy(i => i.Index)
+                                      .ToList()
+                                      .IndexOf(context) + 1 == SequenceItems.Count())"
+                    />
+                    <MudIconButton 
+                        Icon="@Icons.Material.Filled.Edit"
+                        aria-label="Edit"
+                        OnClick=@(() => Navigation.NavigateTo($"/Sequence/{SequenceId}/Item/{context.SequenceItemId}"))
+                        Size="Size.Small"
+                        Color="Color.Primary"
+                    />
+                    <MudIconButton 
+                        Icon="@Icons.Material.Filled.Delete"
+                        aria-label="Delete"
+                        OnClick=@(() => DeleteItem(context))
+                        Size="Size.Small"
+                        Color="Color.Secondary"
+                    />
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Typo="Typo.subtitle1">Nothing to see here. </MudText>
+            </NoRecordsContent>
+            <PagerContent>
+                @if (SequenceItems.Count() > 10)
+                {
+                    <MudTablePager />
+                }
+            </PagerContent>
+        </MudTable>
+    </MudItem>
+</MudGrid>
+<MudGrid Class="pt-2">
+    <MudItem xs="12">
+        <MudGrid Justify="Justify.FlexStart" Spacing="1">
+            <MudItem md="4" sm="6" xs="12">
+                <MudButton 
+                    Variant="Variant.Filled" 
+                    Color="Color.Primary" 
+                    OnClick=@(() => Navigation.NavigateTo($"/Sequence/{SequenceId}/ItemNew")) 
+                    DisableElevation="true" 
+                    FullWidth="true"
+                    aria-label="New sequence item"
+                >
+                    New Sequence Item
+                </MudButton>
+            </MudItem>
+            @if (SelectedItems.Any())
+            {
+                <MudItem md="4" sm="6" xs="12">
+                    <MudButton 
+                        Variant="Variant.Filled" 
+                        Color="Color.Secondary"
+                        OnClick="() => DeleteItems()"
+                        DisableElevation="true" 
+                        FullWidth="true"
+                        aria-label="Delete sequence items"
+                    >
+                        Delete Sequence Items
+                    </MudButton>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter]
+    public List<SequenceItemDescModel> SequenceItems { get; set; } = new List<SequenceItemDescModel>();
+    [Parameter]
+    public EventCallback<List<SequenceItemDescModel>> SequenceItemsChanged { get; set; }
+
+    [Parameter]
+    public bool Loading { get; set; } = true;
+    [Parameter]
+    public EventCallback<bool> LoadingChanged { get; set; }
+
+    [Parameter]
+    public SequenceItemService SequenceItemService { get; set; }
+
+    [Parameter]
+    public int SequenceId { get; set; }
+
+
+    public string SearchString { get; set; } = "";
+    public HashSet<SequenceItemDescModel> SelectedItems = new HashSet<SequenceItemDescModel>();
+    public bool Filter(SequenceItemDescModel element) => FilterFunc(element, SearchString);
+
+    public bool FilterFunc(SequenceItemDescModel element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Description.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.Index.ToString().Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    public async Task DeleteItem(SequenceItemDescModel item)
+    {
+        try
+        {
+            await SequenceItemService.DeleteSequenceItem(item.SequenceItemId);
+            Snackbar.Add("Deleted sequence item. ", Severity.Success);
+            var newItems = SequenceItems
+                .Where(i => i.SequenceItemId != item.SequenceItemId)
+                .ToList();
+            await SequenceItemsChanged.InvokeAsync(newItems);
+            StateHasChanged();
+        }
+        catch (ObjectNotFoundException)
+        {
+            Snackbar.Add($"Hmmm, strange, couldn't find a sequence item with the ID {item.SequenceItemId} on this sequence. ", Severity.Error);
+        }
+        catch
+        {
+            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+        }
+    }
+
+    public async Task DeleteItems()
+    {
+        try
+        {
+            await SequenceItemService.DeleteSequenceItems(SelectedItems.Select(s => s.SequenceItemId));
+            Snackbar.Add("Deleted sequence items. ", Severity.Success);
+            var newItems = SequenceItems
+                .Where(i => !SelectedItems.Contains(i))
+                .ToList();
+            await SequenceItemsChanged.InvokeAsync(newItems);
+            StateHasChanged();
+        }
+        catch (ObjectNotFoundException ex)
+        {
+            Snackbar.Add($"That was weird. {ex.Message}", Severity.Error);
+        }
+        catch
+        {
+            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+        }
+    }
+
+    public async Task MoveDown(SequenceItemDescModel item)
+    {
+        var sortedItem = SequenceItems.OrderBy(u => u.Index).ToList();
+        var index = sortedItem.IndexOf(item);
+
+        if (index + 1 == sortedItem.Count()) return;
+
+        int nextIndex = index + 1;
+        var nextUp = sortedItem[nextIndex];
+        try
+        {
+            await SequenceItemService.SwapSeqItemIndexes(nextUp.SequenceItemId, item.SequenceItemId);
+            await Swap(nextIndex, index);
+            StateHasChanged();
+        }
+        catch
+        {
+            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+        }
+    }
+
+    public async Task MoveUp(SequenceItemDescModel item)
+    {
+        var sortedItem = SequenceItems.OrderBy(u => u.Index).ToList();
+        var index = sortedItem.IndexOf(item);
+
+        if (index == 0) return;
+
+        int lowerIndex = index - 1;
+        var nextLower = sortedItem[lowerIndex];
+        try
+        {
+            await SequenceItemService.SwapSeqItemIndexes(item.SequenceItemId, nextLower.SequenceItemId);
+            await Swap(index, lowerIndex);
+            StateHasChanged();
+        }
+        catch
+        {
+            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+        }
+    }
+
+    public async Task Swap(int item1, int item2)
+    {
+        var sortedItem = SequenceItems.OrderBy(u => u.Index).ToList();
+        int item1Index = sortedItem[item1].Index;
+        int item2Index = sortedItem[item2].Index;
+        sortedItem[item1].Index = item2Index;
+        sortedItem[item2].Index = item1Index;
+        await SequenceItemsChanged.InvokeAsync(sortedItem);
+    }
+}

@@ -6,6 +6,7 @@
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
 
+<PageTitle>New Sequence</PageTitle>
 
 <MudGrid Class="pb-2" Spacing="0" Justify="Justify.Center">
     <MudItem xs="12" sm="7">
@@ -13,7 +14,7 @@
             <MudIconButton 
                 Icon="@Icons.Material.Filled.ArrowBack"
                 aria-label="Go Back"
-                OnClick=@(() => Navigation.NavigateTo("/Sequences"))
+                OnClick=@(() => Navigation.NavigateTo("/"))
                 Size="Size.Medium"
                 Color="Color.Secondary"
             />
@@ -74,7 +75,7 @@
                             Variant="Variant.Filled" 
                             Color="Color.Secondary"
                             aria-label="Go Back"
-                            OnClick=@(() => Navigation.NavigateTo("/Sequences"))
+                            OnClick=@(() => Navigation.NavigateTo("/"))
                             DisableElevation="true" 
                             FullWidth="true"
                         >

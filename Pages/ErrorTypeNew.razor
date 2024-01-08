@@ -6,6 +6,7 @@
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
 
+<PageTitle>New Error Type</PageTitle>
 
 <MudGrid Class="pb-2" Spacing="0" Justify="Justify.Center">
     <MudItem xs="12" sm="7">
@@ -203,7 +204,7 @@
         ModuleId = modId;
         try
         {
-            Sequences = await SequenceService.GetSequences();
+            Sequences = await SequenceService.GetActiveSequences();
         }
         catch
         {

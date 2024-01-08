@@ -54,6 +54,24 @@ public class SequenceItemDataService
             .ToListAsync();
     }
 
+    public async Task<List<SequenceItemDescModel>> GetItemDescriptionsForSeq(int seqId)
+    {
+        return await Context.SequenceItem
+            .Where(s => s.SequenceId == seqId)
+            .Select(s => new SequenceItemDescModel(s.SequenceItemId, s.Index, $"{s.Module.Name}: {s.Option.Name}"))
+            .ToListAsync();
+    }
+
+    public async Task<int> GetHighestIndexForSeq(int seqId)
+    {
+        if (!await Context.SequenceItem
+                .Where(s => s.SequenceId == seqId).AnyAsync())
+            return 0;
+        return await Context.SequenceItem
+            .Where(s => s.SequenceId == seqId)
+            .MaxAsync(x => x.Index);
+    }
+
     public async Task<SequenceItem> UpdateSequenceItem(SequenceItemModel seq)
     {
         var seqItemModel = await GetSequenceItem(seq.SequenceItemId);
@@ -62,18 +80,18 @@ public class SequenceItemDataService
         return seqItemModel;
     }
 
-    public async Task DeleteSequenceItem(SequenceItemModel seq)
+    public async Task DeleteSequenceItem(int seqItemId)
     {
-        var seqItemModel = await GetSequenceItem(seq.SequenceItemId);
+        var seqItemModel = await GetSequenceItem(seqItemId);
         Context.SequenceItem.Remove(seqItemModel);
         await Context.SaveChangesAsync();
     }
 
-    public async Task DeleteSequenceItems(IEnumerable<SequenceItemModel> SequenceItems)
+    public async Task DeleteSequenceItems(IEnumerable<int> seqItemIds)
     {
-        foreach (var seq in SequenceItems)
+        foreach (var id in seqItemIds)
         {
-            var sequenceModel = await GetSequenceItem(seq.SequenceItemId);
+            var sequenceModel = await GetSequenceItem(id);
             Context.SequenceItem.Remove(sequenceModel);
         }
         await Context.SaveChangesAsync();

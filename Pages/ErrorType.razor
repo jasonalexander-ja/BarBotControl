@@ -6,6 +6,7 @@
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
 
+<PageTitle>Edit Error Type</PageTitle>
 
 <MudGrid Class="pb-2" Spacing="0" Justify="Justify.Center">
     <MudItem xs="12" sm="7">
@@ -214,7 +215,7 @@
         {
             Model = await ErrorTypeService.GetErrorType(new ErrorTypeModel
                 { ModuleId = ModuleId, ErrorTypeId = ErrorTypeId });
-            Sequences = await SequenceService.GetSequences();
+            Sequences = await SequenceService.GetActiveSequences();
         }
         catch (ObjectNotFoundException)
         {

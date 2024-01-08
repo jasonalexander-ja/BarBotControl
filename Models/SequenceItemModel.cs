@@ -1,4 +1,6 @@
-﻿namespace BarBotControl.Models;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace BarBotControl.Models;
 
 public class SequenceItemModel
 {
@@ -8,7 +10,9 @@ public class SequenceItemModel
     public int ModuleId { get; set; }
     public int OptionId { get; set; }
     public SequenceModel Sequence { get; set; } = null!;
+    [Required]
     public ModuleModel Module { get; set; } = null!;
+    [Required]
     public OptionModel Option { get; set; } = null!;
 
     public SequenceItemModel() { }

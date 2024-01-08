@@ -19,7 +19,7 @@ public class AppDbContext : DbContext
             .IsUnique();
 
         modelBuilder.Entity<Option>()
-            .HasIndex(u => u.OptionValue)
+            .HasIndex(nameof(Option.OptionValue), nameof(Option.ModuleId))
             .IsUnique();
 
         modelBuilder.Entity<Module>()

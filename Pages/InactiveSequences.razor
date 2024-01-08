@@ -1,18 +1,19 @@
-﻿@page "/"
+@inherits AuthedPageBase
 
+@page "/InactiveSequences"
 
 @inject SequenceService SequenceService
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
 
-<PageTitle>Sequences</PageTitle>
+<PageTitle>Inactive Sequences</PageTitle>
 
 
 <MudGrid Class="pb-2" Justify="Justify.Center">
     <MudItem lg="8" xs="12">
         <MudGrid>
             <MudItem sm="6" xs="12" Class="d-flex align-end pb-0">
-                <MudText Class="pt-2" Typo="Typo.h6">Bot Sequences</MudText>
+                <MudText Class="pt-2" Typo="Typo.h6">Inactive Sequences</MudText>
             </MudItem>
             <MudItem sm="6" xs="12" Class="py-0">
                 <MudTextField 
@@ -34,21 +35,11 @@
                         </MudCardContent>
                         <MudCardActions Class="d-flex justify-end">
                             <MudIconButton
-                                Icon="@Icons.Material.Filled.PlayArrow"
-                                aria-label="Run"
-                                OnClick=@(() => Navigation.NavigateTo($"/Run/{seq.SequenceId}"))
-                                Color="Color.Primary"
+                                Icon="@Icons.Material.Filled.Edit"
+                                aria-label="Edit"
+                                OnClick=@(() => Navigation.NavigateTo($"/Sequence/{seq.SequenceId}"))
+                                Color="Color.Secondary"
                             />
-                            <SudoView>
-                                <Authed>
-                                    <MudIconButton
-                                        Icon="@Icons.Material.Filled.Edit"
-                                        aria-label="Edit"
-                                        OnClick=@(() => Navigation.NavigateTo($"/Sequence/{seq.SequenceId}"))
-                                        Color="Color.Secondary"
-                                    />
-                                </Authed>
-                            </SudoView>
                         </MudCardActions>
                     </MudCard>
                 </MudItem>
@@ -89,11 +80,11 @@
         return false;
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task GetData()
     {
         try
         {
-            Sequences = await SequenceService.GetActiveSequences();
+            Sequences = await SequenceService.GetInactiveSequences();
             Loading = false;
             StateHasChanged();
         }
@@ -105,4 +96,3 @@
     }
 
 }
-

@@ -7,18 +7,34 @@
 @if (IsAuthed)
 {
     <MudNavMenu>
-        <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
-        <MudNavLink Href="Counter" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Add">Counter</MudNavLink>
-        <MudNavLink Href="Users" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.SupervisedUserCircle">Users</MudNavLink>
-        <MudNavLink Href="Modules" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.AccountTree">Modules</MudNavLink>
+        <MudNavGroup Title="Sequences" Expanded="true" Icon="@Icons.Material.Filled.Menu">
+            <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.FormatListNumbered">
+                Sequences
+            </MudNavLink>
+            <MudNavLink Href="InactiveSequences" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.FolderOff">
+                Inactive Sequences
+            </MudNavLink>
+            <MudNavLink Href="SequenceNew" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Add">
+                New Sequence
+            </MudNavLink>
+        </MudNavGroup>
+        <MudNavLink Href="Users" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.SupervisedUserCircle">
+            Users
+        </MudNavLink>
+        <MudNavLink Href="Modules" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.AccountTree">
+            Modules
+        </MudNavLink>
     </MudNavMenu>
 }
 else 
 {
     <MudNavMenu>
-        <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
-        <MudNavLink Href="Counter" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Add">Counter</MudNavLink>
-        <MudNavLink Href="SudoIn" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Login">Sudo In</MudNavLink>
+        <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.FormatListNumbered">
+            Sequences
+        </MudNavLink>
+        <MudNavLink Href="SudoIn" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Login">
+            Sudo In
+        </MudNavLink>
     </MudNavMenu>
 }
 

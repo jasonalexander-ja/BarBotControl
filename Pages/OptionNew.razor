@@ -5,6 +5,7 @@
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
 
+<PageTitle>New Option</PageTitle>
 
 <MudGrid Class="pb-2" Spacing="0" Justify="Justify.Center">
     <MudItem xs="12" sm="7">
@@ -123,7 +124,7 @@
             Snackbar.Add("Strange, looks like this option has been deleted. ", Severity.Error);
             Navigation.NavigateTo($"/Module/{ModuleId}");
         }
-        catch
+        catch (Exception ex)
         {
             Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
         }

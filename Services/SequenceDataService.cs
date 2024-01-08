@@ -49,9 +49,22 @@ public class SequenceDataService
         return sequenceModel;
     }
 
-    public async Task<List<Sequence>> GetSequences()
+    public async Task<List<Sequence>> GetActiveSequences()
     {
-        return await Context.Sequences.ToListAsync();
+        return await Context.Sequences
+            .Where(s => s.SequenceItems.All(i => 
+                i.Module.IsActive && i.Option.IsActive
+            ))
+            .ToListAsync();
+    }
+
+    public async Task<List<Sequence>> GetInactiveSequences()
+    {
+        return await Context.Sequences
+            .Where(s => s.SequenceItems.Any(i => 
+                !i.Module.IsActive || !i.Option.IsActive
+            ))
+            .ToListAsync();
     }
 
     public async Task<List<Sequence>> GetSequencesWithItems()
@@ -73,6 +86,13 @@ public class SequenceDataService
     public async Task DeleteSequence(SequenceModel seq)
     {
         var seqModel = await GetSequence(seq.SequenceId);
+        var seqItems = await Context.SequenceItem.Where(i => i.SequenceId == seqModel.SequenceId)
+            .ToListAsync();
+        if (seqItems.Any())
+        {
+            Context.SequenceItem.RemoveRange(seqItems);
+            await Context.SaveChangesAsync();
+        }
         Context.Sequences.Remove(seqModel);
         await Context.SaveChangesAsync();
     }

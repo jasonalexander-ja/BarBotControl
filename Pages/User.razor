@@ -6,6 +6,7 @@
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
 
+<PageTitle>Edit User</PageTitle>
 
 <MudGrid Class="pb-2" Spacing="0" Justify="Justify.Center">
     <MudItem xs="12" sm="7">
@@ -24,7 +25,7 @@
 
 <MudForm @ref="Form">
     <EditForm Model="@Password" OnValidSubmit="OnValidSubmit">
-        <MudGrid Justify="Justify.Center">
+        <MudGrid Class="pb-2" Justify="Justify.Center">
             <MudItem xs="12" sm="7">
                 <MudCard>
                     <MudCardContent>
@@ -42,6 +43,7 @@
                                         T="string" 
                                         Label="User Name" 
                                         Required="true"
+                                        Disabled="true"
                                         ReadOnly="true"
                                         @bind-Value="UserName"
                                         Variant="Variant.Filled"
@@ -75,7 +77,7 @@
                 </MudCard>
             </MudItem>
         </MudGrid>
-        <MudGrid Justify="Justify.Center" Class="pt-2">
+        <MudGrid Class="pb-2" Justify="Justify.Center">
             <MudItem xs="12" sm="7">
                 <MudGrid Justify="Justify.FlexStart" Spacing="1">
                     <MudItem md="4" sm="6" xs="12">

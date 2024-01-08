@@ -1,15 +1,13 @@
-﻿@using BarBotControl.Exceptions.SudoUser
-@inherits AuthedPageBase
+﻿@inherits AuthedPageBase
 @page "/Sequence/{SequenceId:int}"
 
 @inject SequenceService SequenceService
-@inject ModuleService ModuleService
 @inject SequenceItemService SequenceItemService
-@inject OptionService OptionService
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
+@inject IDialogService DialogService
 
-
+<PageTitle>Edit Sequence</PageTitle>
 
 <MudGrid Class="pb-2" Spacing="0" Justify="Justify.Center">
     <MudItem xs="12" sm="7">
@@ -17,7 +15,7 @@
             <MudIconButton 
                 Icon="@Icons.Material.Filled.ArrowBack"
                 aria-label="Go Back"
-                OnClick=@(() => Navigation.NavigateTo("/Sequences"))
+                OnClick=@(() => Navigation.NavigateTo("/"))
                 Size="Size.Medium"
                 Color="Color.Secondary"
             />
@@ -44,6 +42,7 @@
                                     <MudTextField 
                                         T="string" 
                                         Label="Name" 
+                                        Required="true"
                                         @bind-Value="Model.Name" 
                                         For=@(() => Model.Name)
                                         Variant="Variant.Filled"
@@ -94,11 +93,23 @@
                             Variant="Variant.Filled" 
                             Color="Color.Secondary"
                             aria-label="Go Back"
-                            OnClick=@(() => Navigation.NavigateTo("/Sequences"))
+                            OnClick=@(() => Navigation.NavigateTo("/"))
                             DisableElevation="true" 
                             FullWidth="true"
                         >
                             Back 
+                        </MudButton>
+                    </MudItem>
+                    <MudItem md="4" sm="6" xs="12">
+                        <MudButton 
+                            Variant="Variant.Filled" 
+                            Color="Color.Error"
+                            aria-label="Go Back"
+                            OnClick=@(() => Delete())
+                            DisableElevation="true" 
+                            FullWidth="true"
+                        >
+                            Delete Sequence
                         </MudButton>
                     </MudItem>
                 </MudGrid>
@@ -106,99 +117,34 @@
         </MudGrid>
     </EditForm>
 </MudForm>
-<MudGrid Justify="Justify.Center" Class="pb-2">
+<MudGrid Class="pb-2" Justify="Justify.Center">
     <MudItem xs="12" sm="7">
         <MudDivider />
     </MudItem>
 </MudGrid>
-<SequenceItemAdd
-    @bind-Modules="@Modules"
-    @bind-Options="@Options"
-    @bind-SequenceItems="@SequenceItems"
-    SequenceItemService="SequenceItemService"
-    SequenceId="SequenceId"
-/>
-<MudGrid Class="py-2" Spacing="0" Justify="Justify.Center">
-    <MudItem xs="12" sm="6" lg="4" Class="d-flex flex-column gap-3">
-        @foreach (var (item, index) in SequenceItems.OrderBy(v => v.Index).Select((i, v) => (i, v)))
-        {
-            <MudCard>
-                <MudCardContent Class="pb-1">
-                    <MudText>@item.Module.Name #@index</MudText>
-                    <MudText Typo="Typo.body2">@item.Option.Name</MudText>
-                </MudCardContent>
-                <MudCardActions Class="d-flex justify-space-between pt-0">
-                    <MudIconButton 
-                        OnClick="() => MoveDown(item)" 
-                        Icon="@Icons.Material.Filled.ArrowUpward"
-                        Disabled="index == 0"
-                        aria-label="Move Up" 
-                    />
-                    <MudIconButton 
-                        OnClick="() => MoveUp(item)" 
-                        Icon="@Icons.Material.Filled.ArrowDownward" 
-                        Disabled=@(index + 1 == SequenceItems.Count())
-                        aria-label="Move Down" 
-                    />
-                </MudCardActions>
-            </MudCard>
-        }
+
+<MudGrid Class="pb-2" Justify="Justify.Center">
+    <MudItem xs="12" sm="7">
+        <SequenceItemView 
+            @bind-SequenceItems="SequenceItemDescs"
+            @bind-Loading="Loading"
+            SequenceItemService="SequenceItemService"
+            SequenceId="SequenceId"
+        />
     </MudItem>
 </MudGrid>
 
 
 @code {
     MudForm Form;
+    
     public SequenceModel Model { get; set; } = new SequenceModel();
-    public List<SequenceItemModel> SequenceItems { get; set; } = new List<SequenceItemModel>();
-    public List<ModuleModel> Modules { get; set; } = new List<ModuleModel>();
-    public List<OptionModel> Options { get; set; } = new List<OptionModel>();
+    public List<SequenceItemDescModel> SequenceItemDescs { get; set; } = new List<SequenceItemDescModel>();
 
     [Parameter]
     public int SequenceId { get; set; }
 
     public bool Loading { get; set; } = true;
-
-    public async Task MoveUp(SequenceItemModel item)
-    {
-        var sortedItem = SequenceItems.OrderBy(u => u.Index).ToList();
-        var index = sortedItem.IndexOf(item);
-
-        if (index + 1 == sortedItem.Count()) return;
-
-        var nextUp = sortedItem[index + 1];
-        await SwapSaveIndexes(item, nextUp);
-    }
-
-    public async Task MoveDown(SequenceItemModel item)
-    {
-        var sortedItem = SequenceItems.OrderBy(u => u.Index).ToList();
-        var index = sortedItem.IndexOf(item);
-
-        if (index == 0) return;
-
-        var nextLower = sortedItem[index - 1];
-        await SwapSaveIndexes(item, nextLower);
-    }
-
-    public async Task SwapSaveIndexes(SequenceItemModel item1, SequenceItemModel item2)
-    {
-        var item1Index = item1.Index;
-        var item2Index = item2.Index;
-        item1.Index = item2Index;
-        item2.Index = item1Index;
-        try 
-        {
-            await SequenceItemService.UpdateSequence(item1);
-            await SequenceItemService.UpdateSequence(item2);
-            SequenceItems = await SequenceItemService.GetItemsForSeqWithModuleOpt(SequenceId);
-            StateHasChanged();
-        }
-        catch
-        {
-            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
-        }
-    }
 
     private async Task OnValidSubmit(EditContext context)
     {
@@ -212,9 +158,29 @@
         {
             var newSequence = await SequenceService.UpdateSequence(Model);
             Snackbar.Add("Sequence saved. ", Severity.Success);
-            Navigation.NavigateTo($"/Sequences");
+            Navigation.NavigateTo($"/");
         }
         catch
+        {
+            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+        }
+    }
+
+    public async Task Delete()
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            "Warning", 
+            "Deleting can not be undone!", 
+            yesText:"Delete!", cancelText:"Cancel");
+        if (!result.HasValue || !result.Value)
+            return;
+        try
+        {
+            await SequenceService.DeleteSequence(Model);
+            Snackbar.Add("Deleted sequence. ", Severity.Success);
+            Navigation.NavigateTo("/");
+        }
+        catch 
         {
             Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
         }
@@ -225,14 +191,12 @@
         try
         {
             Model = await SequenceService.GetSequenceWithItems(SequenceId);
-            SequenceItems = await SequenceItemService.GetItemsForSeqWithModuleOpt(SequenceId);
-            Modules = await ModuleService.GetActiveModules();
-            Options = await OptionService.GetActiveOptions();
+            SequenceItemDescs = await SequenceItemService.GetItemDescriptionsForSeq(SequenceId);
         }
         catch (ObjectNotFoundException)
         {
             Snackbar.Add("That's weird, we can't find this sequence. ", Severity.Error);
-            Navigation.NavigateTo("/Sequences");
+            Navigation.NavigateTo("/");
             return;
         }
         catch

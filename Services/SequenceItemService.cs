@@ -34,10 +34,22 @@ public class SequenceItemService
         return models.Select(s => new SequenceItemModel(s)).ToList();
     }
 
+    public async Task<List<SequenceItemDescModel>> GetItemDescriptionsForSeq(int seqId)
+    {
+        var descriptions = await SequenceItemDataService.GetItemDescriptionsForSeq(seqId);
+        return descriptions;
+    }
+
     public async Task<List<SequenceItemModel>> GetItemsForSeqWithModuleOpt(int seqId)
     {
         var models = await SequenceItemDataService.GetItemsForSeqWithModuleOpt(seqId);
         return models.Select(s => new SequenceItemModel(s)).ToList();
+    }
+
+    public async Task<int> GetHighestIndexForSeq(int seqId)
+    {
+        var result = await SequenceItemDataService.GetHighestIndexForSeq(seqId);
+        return result;
     }
 
     public async Task<SequenceItemModel> UpdateSequence(SequenceItemModel seq)
@@ -45,13 +57,25 @@ public class SequenceItemService
         return new SequenceItemModel(await SequenceItemDataService.UpdateSequenceItem(seq));
     }
 
-    public async Task DeleteSequence(SequenceItemModel seq)
+    public async Task SwapSeqItemIndexes(int item1Id, int item2Id)
     {
-        await SequenceItemDataService.DeleteSequenceItem(seq);
+        var item1 = new SequenceItemModel(await SequenceItemDataService.GetSequenceItem(item1Id));
+        var item2 = new SequenceItemModel(await SequenceItemDataService.GetSequenceItem(item2Id));
+        var item1Index = item1.Index;
+        var item2Index = item2.Index;
+        item1.Index = item2Index;
+        item2.Index = item1Index;
+        await SequenceItemDataService.UpdateSequenceItem(item1);
+        await SequenceItemDataService.UpdateSequenceItem(item2);
     }
 
-    public async Task DeleteSequence(IEnumerable<SequenceItemModel> seqs)
+    public async Task DeleteSequenceItem(int seqItemId)
     {
-        await SequenceItemDataService.DeleteSequenceItems(seqs);
+        await SequenceItemDataService.DeleteSequenceItem(seqItemId);
+    }
+
+    public async Task DeleteSequenceItems(IEnumerable<int> seqItemIds)
+    {
+        await SequenceItemDataService.DeleteSequenceItems(seqItemIds);
     }
 }
