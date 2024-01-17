@@ -22,15 +22,15 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 var serverVersion = new MySqlServerVersion(new Version(11, 2, 2));
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(connectionString, serverVersion)
-        .LogTo(Console.WriteLine, LogLevel.Information)
-        .EnableSensitiveDataLogging()
-        .EnableDetailedErrors()
+	options.UseMySql(connectionString, serverVersion)
+		.LogTo(Console.WriteLine, LogLevel.Information)
+		.EnableSensitiveDataLogging()
+		.EnableDetailedErrors()
 );
 
 builder.Services.AddSingleton(
-    builder.Configuration.GetRequiredSection("SudoUserConfig")
-    .Get<SudoUserConfig>());
+	builder.Configuration.GetRequiredSection("SudoUserConfig")
+	.Get<SudoUserConfig>());
 builder.Services.AddSingleton<SessionService>();
 
 builder.Services.AddScoped<SudoUserDataService>();
@@ -74,9 +74,9 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+	app.UseExceptionHandler("/Error");
+	// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+	app.UseHsts();
 }
 
 app.UseHttpsRedirection();
