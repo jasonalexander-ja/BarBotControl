@@ -15,7 +15,9 @@ Ensure that I2C SDA is connected to the host Raspberry Pi's GPIO 2 (pin 3) and S
 
 ### Software
 
-You can quickly install .NET 6 via: 
+Install .NET 6 SDK from [dotnet.microsoft.com](https://dotnet.microsoft.com/en-us/download/dotnet/6.0).
+
+You can quickly install .NET 6 on a Raspberry Pi (Raspbian) via: 
 ```
 wget -O - https://raw.githubusercontent.com/pjgpetecodes/dotnet6pi/master/install.sh | sudo bash
 ```
@@ -45,6 +47,8 @@ sudo apt upgrade
 sudo apt install mariadb-server
 ```
 
+#### Database 
+
 To configure MariaDb, use:
 ```
 sudo mysql_secure_installation
@@ -62,12 +66,11 @@ To administrate the db, enter:
 ```
 sudo mysql -uroot -p
 ```
-
 And enter the root password you set before. 
 
 ### Setup the application 
 
-- Clone & cd into the repository. 
+- Clone & cd `[repository root]/BarBotControl`. 
 - In `appsettings.json`, set `ConnectionStrings:DefaultConnection` to:
     ```
     server=localhost;user=root;password=[your set password];database=BarBotControl
@@ -97,3 +100,5 @@ dotnet run
 ```
 
 Then navigate to the address [localhost:5001](https://localhost:5001).
+
+If you have Visual Studio or VS Code with the C# extension installed, you can debug the application (set breakpoints, view the watch ext.) by opening the solution from the root in Visual Studio or VS Code and pressing `F5`. 
