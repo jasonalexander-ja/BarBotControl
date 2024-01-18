@@ -1,9 +1,9 @@
 ﻿@inherits AuthedPageBase
 @page "/Module/{ModuleIdStr}/OptionNew"
 
-@inject OptionService OptionService
-@inject ISnackbar Snackbar
-@inject NavigationManager Navigation
+@inject OptionService _optionService
+@inject ISnackbar _snackbar
+@inject NavigationManager _navigation
 
 <PageTitle>New Option</PageTitle>
 
@@ -13,7 +13,7 @@
             <MudIconButton 
                 Icon="@Icons.Material.Filled.ArrowBack"
                 aria-label="Go Back"
-                OnClick=@(() => Navigation.NavigateTo($"/Module/{ModuleId}"))
+                OnClick=@(() => _navigation.NavigateTo($"/Module/{ModuleId}"))
                 Size="Size.Medium"
                 Color="Color.Secondary"
             />
@@ -80,7 +80,7 @@
                             Variant="Variant.Filled" 
                             Color="Color.Secondary"
                             aria-label="Go Back"
-                            OnClick=@(() => Navigation.NavigateTo($"/Module/{ModuleId}"))
+                            OnClick=@(() => _navigation.NavigateTo($"/Module/{ModuleId}"))
                             DisableElevation="true" 
                             FullWidth="true"
                         >
@@ -109,24 +109,24 @@
         await Form.Validate();
         if (!Form.IsValid)
         {
-            Snackbar.Add("Ensure all fields are correctly filled out. ", Severity.Warning);
+            _snackbar.Add("Ensure all fields are correctly filled out. ", Severity.Warning);
             return;
         }
         try
         {
             Model.ModuleId = ModuleId;
-            await OptionService.AddOption(Model);
-            Snackbar.Add("Successfully saved option. ", Severity.Success);
-            Navigation.NavigateTo($"/Module/{ModuleId}");
+            await _optionService.AddOption(Model);
+            _snackbar.Add("Successfully saved option. ", Severity.Success);
+            _navigation.NavigateTo($"/Module/{ModuleId}");
         }
         catch (ObjectNotFoundException)
         {
-            Snackbar.Add("Strange, looks like this option has been deleted. ", Severity.Error);
-            Navigation.NavigateTo($"/Module/{ModuleId}");
+            _snackbar.Add("Strange, looks like this option has been deleted. ", Severity.Error);
+            _navigation.NavigateTo($"/Module/{ModuleId}");
         }
         catch (Exception ex)
         {
-            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
         }
     }
 
@@ -134,8 +134,8 @@
     {
         if (!int.TryParse(ModuleIdStr, out var modId))
         {
-            Snackbar.Add("Incorrect formatted module Id. ", Severity.Warning);
-            Navigation.NavigateTo($"/Modules");
+            _snackbar.Add("Incorrect formatted module Id. ", Severity.Warning);
+            _navigation.NavigateTo($"/Modules");
             return;
         }
         ModuleId = modId;

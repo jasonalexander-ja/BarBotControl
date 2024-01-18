@@ -1,4 +1,6 @@
-﻿namespace BarBotControl.Models;
+﻿using BarBotControl.Models;
+
+namespace BarBotControl.Data.Models;
 
 public class Sequence
 {

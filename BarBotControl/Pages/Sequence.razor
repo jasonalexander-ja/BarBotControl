@@ -1,11 +1,11 @@
 ﻿@inherits AuthedPageBase
 @page "/Sequence/{SequenceId:int}"
 
-@inject SequenceService SequenceService
-@inject SequenceItemService SequenceItemService
-@inject ISnackbar Snackbar
-@inject NavigationManager Navigation
-@inject IDialogService DialogService
+@inject SequenceService _sequenceService
+@inject SequenceItemService _sequenceItemService
+@inject ISnackbar _snackbar
+@inject NavigationManager _navigation
+@inject IDialogService _dialogService
 
 <PageTitle>Edit Sequence</PageTitle>
 
@@ -15,7 +15,7 @@
             <MudIconButton 
                 Icon="@Icons.Material.Filled.ArrowBack"
                 aria-label="Go Back"
-                OnClick=@(() => Navigation.NavigateTo("/"))
+                OnClick=@(() => _navigation.NavigateTo("/"))
                 Size="Size.Medium"
                 Color="Color.Secondary"
             />
@@ -93,7 +93,7 @@
                             Variant="Variant.Filled" 
                             Color="Color.Secondary"
                             aria-label="Go Back"
-                            OnClick=@(() => Navigation.NavigateTo("/"))
+                            OnClick=@(() => _navigation.NavigateTo("/"))
                             DisableElevation="true" 
                             FullWidth="true"
                         >
@@ -128,7 +128,7 @@
         <SequenceItemView 
             @bind-SequenceItems="SequenceItemDescs"
             @bind-Loading="Loading"
-            SequenceItemService="SequenceItemService"
+            _sequenceItemService="_sequenceItemService"
             SequenceId="SequenceId"
         />
     </MudItem>
@@ -151,24 +151,24 @@
         await Form.Validate();
         if (!Form.IsValid)
         {
-            Snackbar.Add("Ensure all fields are correctly filled out. ", Severity.Warning);
+            _snackbar.Add("Ensure all fields are correctly filled out. ", Severity.Warning);
             return;
         }
         try
         {
-            var newSequence = await SequenceService.UpdateSequence(Model);
-            Snackbar.Add("Sequence saved. ", Severity.Success);
-            Navigation.NavigateTo($"/");
+            var newSequence = await _sequenceService.UpdateSequence(Model);
+            _snackbar.Add("Sequence saved. ", Severity.Success);
+            _navigation.NavigateTo($"/");
         }
         catch
         {
-            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
         }
     }
 
     public async Task Delete()
     {
-        bool? result = await DialogService.ShowMessageBox(
+        bool? result = await _dialogService.ShowMessageBox(
             "Warning", 
             "Deleting can not be undone!", 
             yesText:"Delete!", cancelText:"Cancel");
@@ -176,13 +176,13 @@
             return;
         try
         {
-            await SequenceService.DeleteSequence(Model);
-            Snackbar.Add("Deleted sequence. ", Severity.Success);
-            Navigation.NavigateTo("/");
+            await _sequenceService.DeleteSequence(Model);
+            _snackbar.Add("Deleted sequence. ", Severity.Success);
+            _navigation.NavigateTo("/");
         }
         catch 
         {
-            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
         }
     }
 
@@ -190,18 +190,18 @@
     {
         try
         {
-            Model = await SequenceService.GetSequenceWithItems(SequenceId);
-            SequenceItemDescs = await SequenceItemService.GetItemDescriptionsForSeq(SequenceId);
+            Model = await _sequenceService.GetSequenceWithItems(SequenceId);
+            SequenceItemDescs = await _sequenceItemService.GetItemDescriptionsForSeq(SequenceId);
         }
         catch (ObjectNotFoundException)
         {
-            Snackbar.Add("That's weird, we can't find this sequence. ", Severity.Error);
-            Navigation.NavigateTo("/");
+            _snackbar.Add("That's weird, we can't find this sequence. ", Severity.Error);
+            _navigation.NavigateTo("/");
             return;
         }
         catch
         {
-            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
         }
         finally
         {

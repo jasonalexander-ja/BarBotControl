@@ -1,32 +1,33 @@
 ﻿using BarBotControl.Data;
+using BarBotControl.Data.Models;
 using BarBotControl.Exceptions;
 using BarBotControl.Models;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace BarBotControl.Services;
+namespace BarBotControl.Services.Accessors;
 
-public class SequenceDataService
+public class SequenceAccessor
 {
-    private readonly AppDbContext Context;
+    private readonly AppDbContext _context;
 
-    public SequenceDataService(AppDbContext context)
+    public SequenceAccessor(AppDbContext context)
     {
-        Context = context;
+        _context = context;
     }
 
     public async Task<Sequence> AddSequence(SequenceModel seq)
     {
         var seqModel = new Sequence(seq);
-        Context.Sequences.Add(seqModel);
-        await Context.SaveChangesAsync();
+        _context.Sequences.Add(seqModel);
+        await _context.SaveChangesAsync();
         return seqModel;
     }
 
     public async Task<Sequence> GetSequence(int seqId)
     {
-        var sequenceModel = await Context.Sequences.FirstOrDefaultAsync(o => o.SequenceId == seqId);
-        if (sequenceModel is null) 
+        var sequenceModel = await _context.Sequences.FirstOrDefaultAsync(o => o.SequenceId == seqId);
+        if (sequenceModel is null)
         {
             throw new ObjectNotFoundException($"Cannot find sequence `{seqId}`. ");
         }
@@ -35,12 +36,12 @@ public class SequenceDataService
 
     public async Task<Sequence> GetSequenceWithItems(int seqId)
     {
-        var sequenceModel = await Context.Sequences.FirstOrDefaultAsync(o => o.SequenceId == seqId);
+        var sequenceModel = await _context.Sequences.FirstOrDefaultAsync(o => o.SequenceId == seqId);
         if (sequenceModel is null)
         {
             throw new ObjectNotFoundException($"Cannot find sequence `{seqId}`. ");
         }
-        sequenceModel.SequenceItems = await Context.Entry(sequenceModel)
+        sequenceModel.SequenceItems = await _context.Entry(sequenceModel)
             .Collection(i => i.SequenceItems)
             .Query()
             .Include(i => i.Module)
@@ -51,8 +52,8 @@ public class SequenceDataService
 
     public async Task<List<Sequence>> GetActiveSequences()
     {
-        return await Context.Sequences
-            .Where(s => s.SequenceItems.All(i => 
+        return await _context.Sequences
+            .Where(s => s.SequenceItems.All(i =>
                 i.Module.IsActive && i.Option.IsActive
             ))
             .ToListAsync();
@@ -60,8 +61,8 @@ public class SequenceDataService
 
     public async Task<List<Sequence>> GetInactiveSequences()
     {
-        return await Context.Sequences
-            .Where(s => s.SequenceItems.Any(i => 
+        return await _context.Sequences
+            .Where(s => s.SequenceItems.Any(i =>
                 !i.Module.IsActive || !i.Option.IsActive
             ))
             .ToListAsync();
@@ -69,7 +70,7 @@ public class SequenceDataService
 
     public async Task<List<Sequence>> GetSequencesWithItems()
     {
-        return await Context.Sequences
+        return await _context.Sequences
             .Include(s => s.SequenceItems)
             .ToListAsync();
     }
@@ -79,22 +80,22 @@ public class SequenceDataService
         var seqModel = await GetSequence(seq.SequenceId);
         seqModel.Name = seq.Name;
         seqModel.Description = seq.Description;
-        await Context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
         return seqModel;
     }
 
     public async Task DeleteSequence(SequenceModel seq)
     {
         var seqModel = await GetSequence(seq.SequenceId);
-        var seqItems = await Context.SequenceItem.Where(i => i.SequenceId == seqModel.SequenceId)
+        var seqItems = await _context.SequenceItem.Where(i => i.SequenceId == seqModel.SequenceId)
             .ToListAsync();
         if (seqItems.Any())
         {
-            Context.SequenceItem.RemoveRange(seqItems);
-            await Context.SaveChangesAsync();
+            _context.SequenceItem.RemoveRange(seqItems);
+            await _context.SaveChangesAsync();
         }
-        Context.Sequences.Remove(seqModel);
-        await Context.SaveChangesAsync();
+        _context.Sequences.Remove(seqModel);
+        await _context.SaveChangesAsync();
     }
 
     public async Task DeleteSequences(IEnumerable<SequenceModel> sequences)
@@ -102,8 +103,8 @@ public class SequenceDataService
         foreach (var seq in sequences)
         {
             var sequenceModel = await GetSequence(seq.SequenceId);
-            Context.Sequences.Remove(sequenceModel);
+            _context.Sequences.Remove(sequenceModel);
         }
-        await Context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
     }
 }

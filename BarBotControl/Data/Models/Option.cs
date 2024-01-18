@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using BarBotControl.Models;
 
-namespace BarBotControl.Models;
+namespace BarBotControl.Data.Models;
 
 public class Option
 {

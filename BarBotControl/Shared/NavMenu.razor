@@ -1,7 +1,7 @@
 ﻿@using BarBotControl.Config
 
-@inject SessionService SessionService
-@inject ILocalStorageService LocalStorage
+@inject SessionService _sessionService
+@inject ILocalStorageService _localStorage
 
 
 @if (IsAuthed)
@@ -44,9 +44,9 @@ else
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
-        string token = await LocalStorage.GetItemAsStringAsync(SessionKeys.SessionTokenKey) ?? "";
+        string token = await _localStorage.GetItemAsStringAsync(SessionKeys.SessionTokenKey) ?? "";
 
-        IsAuthed = SessionService.CheckSession(token);
+        IsAuthed = _sessionService.CheckSession(token);
         StateHasChanged();
         await base.OnAfterRenderAsync(firstRender);
     }

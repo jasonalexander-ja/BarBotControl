@@ -131,7 +131,7 @@
     public EventCallback<bool> LoadingChanged { get; set; }
 
     [Parameter]
-    public SequenceItemService SequenceItemService { get; set; }
+    public SequenceItemService _sequenceItemService { get; set; }
 
     [Parameter]
     public int SequenceId { get; set; }
@@ -156,7 +156,7 @@
     {
         try
         {
-            await SequenceItemService.DeleteSequenceItem(item.SequenceItemId);
+            await _sequenceItemService.DeleteSequenceItem(item.SequenceItemId);
             Snackbar.Add("Deleted sequence item. ", Severity.Success);
             var newItems = SequenceItems
                 .Where(i => i.SequenceItemId != item.SequenceItemId)
@@ -178,7 +178,7 @@
     {
         try
         {
-            await SequenceItemService.DeleteSequenceItems(SelectedItems.Select(s => s.SequenceItemId));
+            await _sequenceItemService.DeleteSequenceItems(SelectedItems.Select(s => s.SequenceItemId));
             Snackbar.Add("Deleted sequence items. ", Severity.Success);
             var newItems = SequenceItems
                 .Where(i => !SelectedItems.Contains(i))
@@ -207,7 +207,7 @@
         var nextUp = sortedItem[nextIndex];
         try
         {
-            await SequenceItemService.SwapSeqItemIndexes(nextUp.SequenceItemId, item.SequenceItemId);
+            await _sequenceItemService.SwapSeqItemIndexes(nextUp.SequenceItemId, item.SequenceItemId);
             await Swap(nextIndex, index);
             StateHasChanged();
         }
@@ -228,7 +228,7 @@
         var nextLower = sortedItem[lowerIndex];
         try
         {
-            await SequenceItemService.SwapSeqItemIndexes(item.SequenceItemId, nextLower.SequenceItemId);
+            await _sequenceItemService.SwapSeqItemIndexes(item.SequenceItemId, nextLower.SequenceItemId);
             await Swap(index, lowerIndex);
             StateHasChanged();
         }

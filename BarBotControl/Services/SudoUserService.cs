@@ -2,6 +2,7 @@
 using BarBotControl.Exceptions;
 using BarBotControl.Exceptions.SudoUser;
 using BarBotControl.Models;
+using BarBotControl.Services.Accessors;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -9,36 +10,38 @@ namespace BarBotControl.Services;
 
 public class SudoUserService
 {
-    private SessionService SessionService;
-    private SudoUserDataService SudoUserDataService;
-    private readonly SudoUserConfig Config;
+    private SessionService _sessionService;
+    private SudoUserAccessor _sudoUserAccessor;
+    private readonly SudoUserConfig _config;
 
     private const int keySize = 64;
     private const int iterations = 350000;
     private HashAlgorithmName hashAlgorithm = HashAlgorithmName.SHA512;
 
-    public SudoUserService(SessionService sessionService, SudoUserDataService sudoUserAccessService, SudoUserConfig config)
+    public SudoUserService(SessionService sessionService, 
+        SudoUserAccessor sudoUserAccessor, 
+        SudoUserConfig config)
     {
-        SessionService = sessionService;
-        SudoUserDataService = sudoUserAccessService;
-        Config = config;
+        _sessionService = sessionService;
+        _sudoUserAccessor = sudoUserAccessor;
+        _config = config;
     }
 
     public async Task<bool> CanStartupSignIn()
     {
-        return await SudoUserDataService.CanStartupSignIn();
+        return await _sudoUserAccessor.CanStartupSignIn();
     }
 
     public async Task<SudoSession> SignUserIn(string userName, string password)
     {
         try
         {
-            var user = await SudoUserDataService.GetUser(userName);
+            var user = await _sudoUserAccessor.GetUser(userName);
             if (!VerifyPassword(password, user.PasswordHash, user.PasswordSalt))
             {
                 throw new WrongDetailsException("Username or password incorrect. ");
             }
-            var sessionKey = SessionService.AddSession(out var expirey);
+            var sessionKey = _sessionService.AddSession(out var expirey);
             var session = new SudoSession(user.UserName, sessionKey, expirey);
             return session;
         }
@@ -54,11 +57,11 @@ public class SudoUserService
         {
             throw new AppHasUsersException("Application already has users. ");
         }
-        if (Config.StartupPasscode != startupPasscode)
+        if (_config.StartupPasscode != startupPasscode)
         {
             throw new WrongDetailsException("Incorrect passcode. ");
         }
-        var sessionKey = SessionService.AddSession(out var expirey);
+        var sessionKey = _sessionService.AddSession(out var expirey);
         var session = new SudoSession("Admin", sessionKey, expirey);
         return session;
     }
@@ -68,7 +71,7 @@ public class SudoUserService
         try
         {
             var passwordHash = HashPasword(password, out var salt);
-            await SudoUserDataService.UpdatePassword(userName, passwordHash, salt);
+            await _sudoUserAccessor.UpdatePassword(userName, passwordHash, salt);
         }
         catch (ObjectNotFoundException ex) 
         {
@@ -80,7 +83,7 @@ public class SudoUserService
     {
         try
         {
-            var user = await SudoUserDataService.GetUser(userName);
+            var user = await _sudoUserAccessor.GetUser(userName);
             return new SudoUserModel(user);
         }
         catch (ObjectNotFoundException ex) 
@@ -91,7 +94,7 @@ public class SudoUserService
 
     public async Task<List<SudoUserModel>> GetUsers()
     {
-        var users = await SudoUserDataService.GetUsers();
+        var users = await _sudoUserAccessor.GetUsers();
         return users.Select(u => new SudoUserModel(u)).ToList();
     }
 
@@ -99,7 +102,7 @@ public class SudoUserService
     {
         try
         {
-            await SudoUserDataService.DeleteUser(userName);
+            await _sudoUserAccessor.DeleteUser(userName);
         }
         catch (ObjectNotFoundException ex) 
         {
@@ -112,7 +115,7 @@ public class SudoUserService
         try
         {
             var userNames = sudoUsers.Select(u => u.UserName);
-            await SudoUserDataService.DeleteUsers(userNames);
+            await _sudoUserAccessor.DeleteUsers(userNames);
         }
         catch (ObjectNotFoundException ex)
         {
@@ -123,7 +126,7 @@ public class SudoUserService
     public async Task<SudoUserModel> AddUser(string userName, string password)
     {
         var passwordHash = HashPasword(password, out var salt);
-        var user = await SudoUserDataService.CreateUser(userName, passwordHash, salt);
+        var user = await _sudoUserAccessor.CreateUser(userName, passwordHash, salt);
         return new SudoUserModel(user);
     }
 

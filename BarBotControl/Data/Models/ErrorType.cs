@@ -1,6 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using BarBotControl.Models;
+using Microsoft.EntityFrameworkCore;
 
-namespace BarBotControl.Models;
+namespace BarBotControl.Data.Models;
 
 public class ErrorType
 {

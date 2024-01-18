@@ -1,4 +1,6 @@
-﻿namespace BarBotControl.Models;
+﻿using BarBotControl.Data.Models;
+
+namespace BarBotControl.Models;
 
 public class SudoUserModel
 {

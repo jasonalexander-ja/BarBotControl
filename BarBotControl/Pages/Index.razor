@@ -1,9 +1,9 @@
 ﻿@page "/"
 
 
-@inject SequenceService SequenceService
-@inject ISnackbar Snackbar
-@inject NavigationManager Navigation
+@inject SequenceService _sequenceService
+@inject ISnackbar _snackbar
+@inject NavigationManager _navigation
 
 <PageTitle>Sequences</PageTitle>
 
@@ -36,7 +36,7 @@
                             <MudIconButton
                                 Icon="@Icons.Material.Filled.PlayArrow"
                                 aria-label="Run"
-                                OnClick=@(() => Navigation.NavigateTo($"/Run/{seq.SequenceId}"))
+                                OnClick=@(() => _navigation.NavigateTo($"/Run/{seq.SequenceId}"))
                                 Color="Color.Primary"
                             />
                             <SudoView>
@@ -44,7 +44,7 @@
                                     <MudIconButton
                                         Icon="@Icons.Material.Filled.Edit"
                                         aria-label="Edit"
-                                        OnClick=@(() => Navigation.NavigateTo($"/Sequence/{seq.SequenceId}"))
+                                        OnClick=@(() => _navigation.NavigateTo($"/Sequence/{seq.SequenceId}"))
                                         Color="Color.Secondary"
                                     />
                                 </Authed>
@@ -93,13 +93,13 @@
     {
         try
         {
-            Sequences = await SequenceService.GetActiveSequences();
+            Sequences = await _sequenceService.GetActiveSequences();
             Loading = false;
             StateHasChanged();
         }
         catch
         {
-            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
         }
         
     }

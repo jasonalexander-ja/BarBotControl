@@ -1,9 +1,9 @@
 ﻿@inherits AuthedPageBase
 @page "/Module/{ModuleIdStr}/Option/{OptIdStr}"
 
-@inject OptionService OptionService
-@inject ISnackbar Snackbar
-@inject NavigationManager Navigation
+@inject OptionService _optionService
+@inject ISnackbar _snackbar
+@inject NavigationManager _navigation
 
 <PageTitle>Edit Option</PageTitle>
 
@@ -13,7 +13,7 @@
             <MudIconButton 
                 Icon="@Icons.Material.Filled.ArrowBack"
                 aria-label="Go Back"
-                OnClick=@(() => Navigation.NavigateTo($"/Module/{ModuleId}"))
+                OnClick=@(() => _navigation.NavigateTo($"/Module/{ModuleId}"))
                 Size="Size.Medium"
                 Color="Color.Secondary"
             />
@@ -104,7 +104,7 @@
                             Variant="Variant.Filled" 
                             Color="Color.Secondary"
                             aria-label="Go Back"
-                            OnClick=@(() => Navigation.NavigateTo($"/Module/{ModuleId}"))
+                            OnClick=@(() => _navigation.NavigateTo($"/Module/{ModuleId}"))
                             DisableElevation="true" 
                             FullWidth="true"
                         >
@@ -139,23 +139,23 @@
         await Form.Validate();
         if (!Form.IsValid)
         {
-            Snackbar.Add("Ensure all fields are correctly filled out. ", Severity.Warning);
+            _snackbar.Add("Ensure all fields are correctly filled out. ", Severity.Warning);
             return;
         }
         try
         {
-            await OptionService.UpdateOption(Model);
-            Snackbar.Add("Successfully updated option. ", Severity.Success);
-            Navigation.NavigateTo($"/Module/{ModuleId}");
+            await _optionService.UpdateOption(Model);
+            _snackbar.Add("Successfully updated option. ", Severity.Success);
+            _navigation.NavigateTo($"/Module/{ModuleId}");
         }
         catch (ObjectNotFoundException)
         {
-            Snackbar.Add("Strange, looks like this option has been deleted. ", Severity.Error);
-            Navigation.NavigateTo($"/Module/{ModuleId}");
+            _snackbar.Add("Strange, looks like this option has been deleted. ", Severity.Error);
+            _navigation.NavigateTo($"/Module/{ModuleId}");
         }
         catch
         {
-            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
         }
     }
 
@@ -163,31 +163,31 @@
     {
         if (!int.TryParse(ModuleIdStr, out var modId))
         {
-            Snackbar.Add("Incorrect formatted module Id. ", Severity.Warning);
-            Navigation.NavigateTo($"/Modules");
+            _snackbar.Add("Incorrect formatted module Id. ", Severity.Warning);
+            _navigation.NavigateTo($"/Modules");
             return;
         }
         if (!int.TryParse(OptIdStr, out var optId))
         {
-            Snackbar.Add("Incorrect formatted option Id. ", Severity.Warning);
-            Navigation.NavigateTo($"/Module/{modId}");
+            _snackbar.Add("Incorrect formatted option Id. ", Severity.Warning);
+            _navigation.NavigateTo($"/Module/{modId}");
             return;
         }
         ModuleId = modId;
         OptId = optId;
         try
         {
-            Model = await OptionService.GetOption(new OptionModel { ModuleId = ModuleId, OptionId = OptId });
+            Model = await _optionService.GetOption(new OptionModel { ModuleId = ModuleId, OptionId = OptId });
         }
         catch (ObjectNotFoundException)
         {
-            Snackbar.Add("That's weird, we can't find this option. ", Severity.Error);
-            Navigation.NavigateTo($"/Module/{ModuleId}");
+            _snackbar.Add("That's weird, we can't find this option. ", Severity.Error);
+            _navigation.NavigateTo($"/Module/{ModuleId}");
             return;
         }
         catch
         {
-            Snackbar.Add("Something went really wrong there, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went really wrong there, go yell at Jason. ", Severity.Error);
         }
         finally
         {

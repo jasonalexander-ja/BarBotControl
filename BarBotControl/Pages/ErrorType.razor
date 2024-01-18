@@ -1,10 +1,10 @@
 ﻿@inherits AuthedPageBase
 @page "/Module/{ModuleIdStr}/ErrorType/{ErrorTypeIdStr}"
 
-@inject ErrorTypeService ErrorTypeService
-@inject SequenceService SequenceService
-@inject ISnackbar Snackbar
-@inject NavigationManager Navigation
+@inject ErrorTypeService _errorTypeService
+@inject SequenceService _sequenceService
+@inject ISnackbar _snackbar
+@inject NavigationManager _navigation
 
 <PageTitle>Edit Error Type</PageTitle>
 
@@ -14,7 +14,7 @@
             <MudIconButton 
                 Icon="@Icons.Material.Filled.ArrowBack"
                 aria-label="Go Back"
-                OnClick=@(() => Navigation.NavigateTo($"/Module/{ModuleId}"))
+                OnClick=@(() => _navigation.NavigateTo($"/Module/{ModuleId}"))
                 Size="Size.Medium"
                 Color="Color.Secondary"
             />
@@ -126,7 +126,7 @@
                             Variant="Variant.Filled" 
                             Color="Color.Secondary"
                             aria-label="Go Back"
-                            OnClick=@(() => Navigation.NavigateTo($"/Module/{ModuleId}"))
+                            OnClick=@(() => _navigation.NavigateTo($"/Module/{ModuleId}"))
                             DisableElevation="true" 
                             FullWidth="true"
                         >
@@ -175,23 +175,23 @@
         await Form.Validate();
         if (!Form.IsValid)
         {
-            Snackbar.Add("Ensure all fields are correctly filled out. ", Severity.Warning);
+            _snackbar.Add("Ensure all fields are correctly filled out. ", Severity.Warning);
             return;
         }
         try
         {
-            await ErrorTypeService.UpdateErrorType(Model);
-            Snackbar.Add("Successfully saved error type. ", Severity.Success);
-            Navigation.NavigateTo($"/Module/{ModuleId}");
+            await _errorTypeService.UpdateErrorType(Model);
+            _snackbar.Add("Successfully saved error type. ", Severity.Success);
+            _navigation.NavigateTo($"/Module/{ModuleId}");
         }
         catch (ObjectNotFoundException ex)
         {
-            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+            _snackbar.Add($"Error: {ex.Message}", Severity.Error);
             return;
         }
         catch
         {
-            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
         }
     }
 
@@ -199,31 +199,31 @@
     {
         if (!int.TryParse(ModuleIdStr, out var modId))
         {
-            Snackbar.Add("Incorrect formatted module Id. ", Severity.Warning);
-            Navigation.NavigateTo($"/Modules");
+            _snackbar.Add("Incorrect formatted module Id. ", Severity.Warning);
+            _navigation.NavigateTo($"/Modules");
             return;
         }
         if (!int.TryParse(ErrorTypeIdStr, out var errTypeId))
         {
-            Snackbar.Add("Incorrect formatted error types Id. ", Severity.Warning);
-            Navigation.NavigateTo($"/Module/{modId}");
+            _snackbar.Add("Incorrect formatted error types Id. ", Severity.Warning);
+            _navigation.NavigateTo($"/Module/{modId}");
             return;
         }
         ModuleId = modId;
         ErrorTypeId = errTypeId;
         try
         {
-            Model = await ErrorTypeService.GetErrorType(new ErrorTypeModel
+            Model = await _errorTypeService.GetErrorType(new ErrorTypeModel
                 { ModuleId = ModuleId, ErrorTypeId = ErrorTypeId });
-            Sequences = await SequenceService.GetActiveSequences();
+            Sequences = await _sequenceService.GetActiveSequences();
         }
         catch (ObjectNotFoundException)
         {
-            Snackbar.Add($"Can't find error type Id {ErrorTypeId} on module Id {ModuleId}. ", Severity.Error);
+            _snackbar.Add($"Can't find error type Id {ErrorTypeId} on module Id {ModuleId}. ", Severity.Error);
         }
         catch
         {
-            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
         }
         finally
         {

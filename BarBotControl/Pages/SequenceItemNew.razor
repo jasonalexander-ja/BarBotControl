@@ -1,11 +1,11 @@
 @inherits AuthedPageBase
 @page "/Sequence/{SequenceId:int}/ItemNew"
 
-@inject ModuleService ModuleService
-@inject SequenceItemService SequenceItemService
-@inject OptionService OptionService
-@inject ISnackbar Snackbar
-@inject NavigationManager Navigation
+@inject ModuleService _moduleService
+@inject SequenceItemService _sequenceItemService
+@inject OptionService _optionService
+@inject ISnackbar _snackbar
+@inject NavigationManager _navigation
 
 <PageTitle>Add Sequence Item</PageTitle>
 
@@ -15,7 +15,7 @@
             <MudIconButton 
                 Icon="@Icons.Material.Filled.ArrowBack"
                 aria-label="Go Back"
-                OnClick=@(() => Navigation.NavigateTo($"/Sequence/{SequenceId}"))
+                OnClick=@(() => _navigation.NavigateTo($"/Sequence/{SequenceId}"))
                 Size="Size.Medium"
                 Color="Color.Secondary"
             />
@@ -98,7 +98,7 @@
                             Variant="Variant.Filled" 
                             Color="Color.Secondary"
                             aria-label="Go Back"
-                            OnClick=@(() => Navigation.NavigateTo($"/Sequence/{SequenceId}"))
+                            OnClick=@(() => _navigation.NavigateTo($"/Sequence/{SequenceId}"))
                             DisableElevation="true" 
                             FullWidth="true"
                         >
@@ -151,12 +151,12 @@
     {
         try
         {
-            Modules = await ModuleService.GetActiveModules();
-            Options = await OptionService.GetActiveOptions();
+            Modules = await _moduleService.GetActiveModules();
+            Options = await _optionService.GetActiveOptions();
         }
         catch
         {
-            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
         }
         finally
         {
@@ -170,22 +170,22 @@
         await Form.Validate();
         if (!Form.IsValid)
         {
-            Snackbar.Add("Ensure all fields are correctly filled out. ", Severity.Warning);
+            _snackbar.Add("Ensure all fields are correctly filled out. ", Severity.Warning);
             return;
         }
         try
         {
-            int index = await SequenceItemService.GetHighestIndexForSeq(SequenceId);
+            int index = await _sequenceItemService.GetHighestIndexForSeq(SequenceId);
             Model.SequenceId = SequenceId;
             Model.ModuleId = Model.Module.ModuleId;
             Model.OptionId = Model.Option.OptionId;
             Model.Index = index + 10;
-            await SequenceItemService.AddSequence(Model);
-            Navigation.NavigateTo($"Sequence/{SequenceId}");
+            await _sequenceItemService.AddSequence(Model);
+            _navigation.NavigateTo($"Sequence/{SequenceId}");
         }
         catch (Exception ex)
         {
-            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
         }
     }
 }

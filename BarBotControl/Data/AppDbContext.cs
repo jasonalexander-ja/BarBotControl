@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using BarBotControl.Models;
+using BarBotControl.Data.Models;
 
 namespace BarBotControl.Data;
 

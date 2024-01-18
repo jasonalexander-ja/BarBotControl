@@ -1,4 +1,6 @@
-﻿namespace BarBotControl.Models;
+﻿using BarBotControl.Models;
+
+namespace BarBotControl.Data.Models;
 
 public class SequenceItem
 {
@@ -12,7 +14,7 @@ public class SequenceItem
     public Option Option { get; set; } = null!;
 
     public SequenceItem() { }
-    public SequenceItem(SequenceItemModel model) 
+    public SequenceItem(SequenceItemModel model)
     {
         SequenceItemId = model.SequenceItemId;
         SequenceId = model.SequenceId;

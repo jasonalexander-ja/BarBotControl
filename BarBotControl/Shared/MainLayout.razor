@@ -2,7 +2,7 @@
 
 <MudThemeProvider 
     Theme="@MakeTheme()"
-    @bind-IsDarkMode="StateProvider.DarkMode" 
+    @bind-IsDarkMode="State.DarkMode" 
 />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -24,13 +24,13 @@
 
 @code {
     [CascadingParameter]
-    public StateProvider StateProvider { get; set; } = new StateProvider();
+    public StateProvider State { get; set; } = new StateProvider();
 
     bool DrawerOpen = true;
 
     public async Task ToggleDarkMode()
     {
-        await StateProvider.SetDarkMode(!StateProvider.DarkMode);
+        await State.SetDarkMode(!State.DarkMode);
         StateHasChanged();
     }
 

@@ -7,17 +7,17 @@ public class SessionService
 {
     private Dictionary<string, DateTime> Sessions = new Dictionary<string, DateTime>();
 
-    private readonly SudoUserConfig Config;
+    private readonly SudoUserConfig _config;
 
     public SessionService(SudoUserConfig config)
     {
-        Config = config;
+        _config = config;
     }
 
     public string AddSession(out DateTime expirey)
     {
         string id = Guid.NewGuid().ToString();
-        DateTime timeout = DateTime.Now.AddMinutes(Config.SessionMinutes);
+        DateTime timeout = DateTime.Now.AddMinutes(_config.SessionMinutes);
         Sessions.Add(id, timeout);
         expirey = timeout;
         return id;

@@ -11,6 +11,7 @@ using BarBotControl.Data;
 using BarBotControl.Config;
 using BarBotControl.Services;
 using Microsoft.Extensions.DependencyInjection;
+using BarBotControl.Services.Accessors;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,22 +34,22 @@ builder.Services.AddSingleton(
 	.Get<SudoUserConfig>());
 builder.Services.AddSingleton<SessionService>();
 
-builder.Services.AddScoped<SudoUserDataService>();
+builder.Services.AddScoped<SudoUserAccessor>();
 builder.Services.AddScoped<SudoUserService>();
 
-builder.Services.AddScoped<ModuleDataService>();
+builder.Services.AddScoped<ModuleAccessor>();
 builder.Services.AddScoped<ModuleService>();
 
-builder.Services.AddScoped<OptionDataService>();
+builder.Services.AddScoped<OptionAccessor>();
 builder.Services.AddScoped<OptionService>();
 
-builder.Services.AddScoped<ErrorTypeDataService>();
+builder.Services.AddScoped<ErrorTypeAccessor>();
 builder.Services.AddScoped<ErrorTypeService>();
 
-builder.Services.AddScoped<SequenceDataService>();
+builder.Services.AddScoped<SequenceAccessor>();
 builder.Services.AddScoped<SequenceService>();
 
-builder.Services.AddScoped<SequenceItemDataService>();
+builder.Services.AddScoped<SequenceItemAccessor>();
 builder.Services.AddScoped<SequenceItemService>();
 
 

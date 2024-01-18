@@ -5,32 +5,33 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using System;
 using BarBotControl.Data;
+using BarBotControl.Data.Models;
 
 
-namespace BarBotControl.Services;
+namespace BarBotControl.Services.Accessors;
 
-public class OptionDataService
+public class OptionAccessor
 {
-    private readonly AppDbContext Context;
+    private readonly AppDbContext _context;
 
-    public OptionDataService(AppDbContext context)
+    public OptionAccessor(AppDbContext context)
     {
-        Context = context;
+        _context = context;
     }
 
     public async Task<Option> AddOption(OptionModel opt)
     {
         var optModel = new Option(opt);
-        Context.Options.Add(optModel);
-        await Context.SaveChangesAsync();
+        _context.Options.Add(optModel);
+        await _context.SaveChangesAsync();
         return optModel;
     }
 
     public async Task<Option> GetOption(OptionModel opt)
     {
-        var optionModel = await Context.Options.FirstOrDefaultAsync(
+        var optionModel = await _context.Options.FirstOrDefaultAsync(
             o => o.OptionId == opt.OptionId && o.ModuleId == opt.ModuleId);
-        if (optionModel is null) 
+        if (optionModel is null)
         {
             throw new ObjectNotFoundException($"Cannot find option `{opt.Name}` (Id {opt.OptionId}) on module. ");
         }
@@ -39,14 +40,14 @@ public class OptionDataService
 
     public async Task<List<Option>> GetActiveOptions()
     {
-        return await Context.Options
+        return await _context.Options
             .Where(opt => opt.IsActive && opt.Module.IsActive)
             .ToListAsync();
     }
 
     public async Task<List<Option>> GetOptionsForModule(int moduleId)
     {
-        return await Context.Options.Where(opt => opt.ModuleId == moduleId).ToListAsync();
+        return await _context.Options.Where(opt => opt.ModuleId == moduleId).ToListAsync();
     }
 
     public async Task<Option> UpdateOption(OptionModel opt)
@@ -55,15 +56,15 @@ public class OptionDataService
         optModel.OptionValue = opt.OptionValue;
         optModel.IsActive = opt.IsActive;
         optModel.Name = opt.Name;
-        await Context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
         return optModel;
     }
 
     public async Task DeleteOption(OptionModel opt)
     {
         var optionModel = await GetOption(opt);
-        Context.Options.Remove(optionModel);
-        await Context.SaveChangesAsync();
+        _context.Options.Remove(optionModel);
+        await _context.SaveChangesAsync();
     }
 
     public async Task DeleteOptions(IEnumerable<OptionModel> options)
@@ -71,8 +72,8 @@ public class OptionDataService
         foreach (var opt in options)
         {
             var optionModel = await GetOption(opt);
-            Context.Options.Remove(optionModel);
+            _context.Options.Remove(optionModel);
         }
-        await Context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
     }
 }

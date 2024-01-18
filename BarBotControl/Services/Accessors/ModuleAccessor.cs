@@ -6,17 +6,18 @@ using BarBotControl.Exceptions;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using System;
+using BarBotControl.Data.Models;
 
 
-namespace BarBotControl.Services;
+namespace BarBotControl.Services.Accessors;
 
-public class ModuleDataService
+public class ModuleAccessor
 {
-    private readonly AppDbContext Context;
+    private readonly AppDbContext _context;
 
-    public ModuleDataService(AppDbContext context)
+    public ModuleAccessor(AppDbContext context)
     {
-        Context = context;
+        _context = context;
     }
 
     public async Task<Module> CreateModule(ModuleModel module)
@@ -27,15 +28,15 @@ public class ModuleDataService
             Channel = module.Channel,
             IsActive = module.IsActive,
         };
-        Context.Modules.Add(model);
-        await Context.SaveChangesAsync();
+        _context.Modules.Add(model);
+        await _context.SaveChangesAsync();
         return model;
     }
 
     public async Task<Module> GetModule(int id)
     {
-        var result = await Context.Modules.FirstOrDefaultAsync(u => u.ModuleId == id);
-        if (result == null) 
+        var result = await _context.Modules.FirstOrDefaultAsync(u => u.ModuleId == id);
+        if (result == null)
         {
             throw new ObjectNotFoundException($"Can't find module with ID {id}");
         }
@@ -44,7 +45,7 @@ public class ModuleDataService
 
     public async Task<List<Module>> GetActiveModulesWithOptions()
     {
-        return await Context.Modules
+        return await _context.Modules
             .Where(m => m.IsActive == true)
             .Include(m => m.Options.Where(o => o.IsActive == true))
             .ToListAsync();
@@ -52,7 +53,7 @@ public class ModuleDataService
 
     public async Task<Module> GetModuleWithRelatedData(int id)
     {
-        var result = await Context.Modules
+        var result = await _context.Modules
             .Include(m => m.Options)
             .Include(m => m.ErrorTypes)
             .FirstOrDefaultAsync(u => u.ModuleId == id);
@@ -65,12 +66,12 @@ public class ModuleDataService
 
     public async Task<List<Module>> GetModules()
     {
-        return await Context.Modules.ToListAsync();
+        return await _context.Modules.ToListAsync();
     }
 
     public async Task<List<Module>> GetActiveModules()
     {
-        return await Context.Modules.Where(m => m.IsActive).ToListAsync();
+        return await _context.Modules.Where(m => m.IsActive).ToListAsync();
     }
 
     public async Task<Module> UpdateModule(ModuleModel module)
@@ -79,19 +80,19 @@ public class ModuleDataService
         model.Name = module.Name;
         model.Channel = module.Channel;
         model.IsActive = module.IsActive;
-        await Context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
         return model;
     }
 
     public async Task DeleteModule(ModuleModel module)
     {
-        var model = await Context.Modules.FirstOrDefaultAsync(m => m.ModuleId == module.ModuleId);
+        var model = await _context.Modules.FirstOrDefaultAsync(m => m.ModuleId == module.ModuleId);
         if (model == null)
         {
             throw new ObjectNotFoundException($"Can't find module with ID {module.ModuleId}");
         }
-        Context.Modules.Remove(model);
-        await Context.SaveChangesAsync();
+        _context.Modules.Remove(model);
+        await _context.SaveChangesAsync();
     }
 
     public async Task DeleteModules(IEnumerable<ModuleModel> modules)
@@ -99,8 +100,8 @@ public class ModuleDataService
         foreach (var m in modules)
         {
             var user = await GetModule(m.ModuleId);
-            Context.Modules.Remove(user);
+            _context.Modules.Remove(user);
         }
-        await Context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
     }
 }

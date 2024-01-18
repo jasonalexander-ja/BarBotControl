@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using BarBotControl.Data.Models;
 
 namespace BarBotControl.Models;
 

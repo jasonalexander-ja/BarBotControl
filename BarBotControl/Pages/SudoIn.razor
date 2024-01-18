@@ -5,10 +5,10 @@
 @using BarBotControl.Models
 
 @page "/SudoIn"
-@inject ILocalStorageService LocalStorage
-@inject SudoUserService SudoUserService
+@inject ILocalStorageService _localStorage
+@inject SudoUserService _sudoUserService
 @inject SessionService SessionService
-@inject ISnackbar Snackbar
+@inject ISnackbar _snackbar
 @inject IJSRuntime JS
 
 
@@ -139,22 +139,22 @@ else
         try
         {
             var session = await loginCurriedFunc.Invoke();
-            await LocalStorage.SetItemAsStringAsync(SessionKeys.SessionTokenKey, session.SessionKey);
-            await LocalStorage.SetItemAsStringAsync(SessionKeys.SessionUserNameKey, session.UserName);
+            await _localStorage.SetItemAsStringAsync(SessionKeys.SessionTokenKey, session.SessionKey);
+            await _localStorage.SetItemAsStringAsync(SessionKeys.SessionUserNameKey, session.UserName);
             await JS.InvokeVoidAsync("reload");
         }
         catch (SignInBaseException ex)
         {
-            Snackbar.Add(ex.Message, Severity.Warning);
+            _snackbar.Add(ex.Message, Severity.Warning);
         }
         catch (AppHasUsersException)
         {
-            Snackbar.Add("Users have already been added to this app and startup login is not available. ", Severity.Warning);
+            _snackbar.Add("Users have already been added to this app and startup login is not available. ", Severity.Warning);
             StateHasChanged();
         }
         catch (Exception)
         {
-            Snackbar.Add("Something went really wrong there, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went really wrong there, go yell at Jason. ", Severity.Error);
         }
     }
 
@@ -163,10 +163,10 @@ else
         await UserNameForm.Validate();
         if (!UserNameForm.IsValid)
         {
-            Snackbar.Add("Ensure username and password is entered. ", Severity.Warning);
+            _snackbar.Add("Ensure username and password is entered. ", Severity.Warning);
             return;
         }
-        await TryLogin(async () => await SudoUserService.SignUserIn(UsernamePassword.UserName, UsernamePassword.Password));
+        await TryLogin(async () => await _sudoUserService.SignUserIn(UsernamePassword.UserName, UsernamePassword.Password));
     }
 
     private async Task OnValidSubmitStartupLogin(EditContext context)
@@ -174,15 +174,15 @@ else
         await StartupForm.Validate();
         if (!StartupForm.IsValid)
         {
-            Snackbar.Add("Please enter a startup passcode. ", Severity.Warning);
+            _snackbar.Add("Please enter a startup passcode. ", Severity.Warning);
             return;
         }
-        await TryLogin(async () => await SudoUserService.StartupSignIn(StartupPasscode.Passcode));
+        await TryLogin(async () => await _sudoUserService.StartupSignIn(StartupPasscode.Passcode));
     }
 
     protected override async Task OnInitializedAsync()
     {
-        IsStartup = await SudoUserService.CanStartupSignIn();
+        IsStartup = await _sudoUserService.CanStartupSignIn();
 
         await base.OnInitializedAsync();
     }

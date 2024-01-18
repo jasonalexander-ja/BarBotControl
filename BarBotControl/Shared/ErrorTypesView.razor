@@ -1,5 +1,5 @@
-﻿@inject NavigationManager Navigation
-@inject ISnackbar Snackbar
+﻿@inject NavigationManager _navigation
+@inject ISnackbar _snackbar
 
 <MudGrid Class="pb-4" Spacing="0">
     <MudItem sm="6" xs="12" Class="d-flex align-end">
@@ -42,7 +42,7 @@
                     <MudIconButton 
                         Icon="@Icons.Material.Filled.Edit"
                         aria-label="Edit"
-                        OnClick=@(() => Navigation.NavigateTo($"/Module/{ModuleId}/ErrorType/{context.ErrorTypeId}"))
+                        OnClick=@(() => _navigation.NavigateTo($"/Module/{ModuleId}/ErrorType/{context.ErrorTypeId}"))
                         Size="Size.Small"
                         Color="Color.Primary"
                     />
@@ -75,7 +75,7 @@
                 <MudButton 
                     Variant="Variant.Filled" 
                     Color="Color.Primary" 
-                    OnClick=@(() => Navigation.NavigateTo($"/Module/{ModuleId}/ErrorTypeNew")) 
+                    OnClick=@(() => _navigation.NavigateTo($"/Module/{ModuleId}/ErrorTypeNew")) 
                     DisableElevation="true" 
                     FullWidth="true"
                     aria-label="New error type"
@@ -155,17 +155,17 @@
         try
         {
             await ErrorTypeService.DeleteErrorType(opt);
-            Snackbar.Add("Deleted error type. ", Severity.Success);
+            _snackbar.Add("Deleted error type. ", Severity.Success);
             await ErrorTypesChanged.InvokeAsync(await ErrorTypeService.GetErrorTypesForModule(ModuleId));
             StateHasChanged();
         }
         catch (ObjectNotFoundException)
         {
-            Snackbar.Add($"Hmmm, strange, couldn't find a error type with the ID {opt.ModuleId} on this module. ", Severity.Error);
+            _snackbar.Add($"Hmmm, strange, couldn't find a error type with the ID {opt.ModuleId} on this module. ", Severity.Error);
         }
         catch
         {
-            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
         }
     }
 
@@ -174,17 +174,17 @@
         try
         {
             await ErrorTypeService.DeleteErrorTypes(SelectedErrorTypes);
-            Snackbar.Add("Deleted error types. ", Severity.Success);
+            _snackbar.Add("Deleted error types. ", Severity.Success);
             await ErrorTypesChanged.InvokeAsync(await ErrorTypeService.GetErrorTypesForModule(ModuleId));
             StateHasChanged();
         }
         catch (ObjectNotFoundException ex)
         {
-            Snackbar.Add($"That was weird. {ex.Message}", Severity.Error);
+            _snackbar.Add($"That was weird. {ex.Message}", Severity.Error);
         }
         catch
         {
-            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
         }
     }
 

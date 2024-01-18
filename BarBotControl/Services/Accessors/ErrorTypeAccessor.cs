@@ -5,32 +5,33 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using System;
 using BarBotControl.Data;
+using BarBotControl.Data.Models;
 
 
-namespace BarBotControl.Services;
+namespace BarBotControl.Services.Accessors;
 
-public class ErrorTypeDataService
+public class ErrorTypeAccessor
 {
-    private readonly AppDbContext Context;
+    private readonly AppDbContext _context;
 
-    public ErrorTypeDataService(AppDbContext context)
+    public ErrorTypeAccessor(AppDbContext context)
     {
-        Context = context;
+        _context = context;
     }
 
     public async Task<ErrorType> AddErrorType(ErrorTypeModel errType)
     {
         var errorTypeModel = new ErrorType(errType);
-        Context.ErrorTypes.Add(errorTypeModel);
-        await Context.SaveChangesAsync();
+        _context.ErrorTypes.Add(errorTypeModel);
+        await _context.SaveChangesAsync();
         return errorTypeModel;
     }
 
     public async Task<ErrorType> GetErrorType(ErrorTypeModel errType)
     {
-        var errorTypeModel = await Context.ErrorTypes.FirstOrDefaultAsync(
+        var errorTypeModel = await _context.ErrorTypes.FirstOrDefaultAsync(
             o => o.ErrorTypeId == errType.ErrorTypeId && o.ModuleId == errType.ModuleId);
-        if (errorTypeModel is null) 
+        if (errorTypeModel is null)
         {
             throw new ObjectNotFoundException($"Cannot find module `{errType.ErrorMessage}` on module. ");
         }
@@ -39,7 +40,7 @@ public class ErrorTypeDataService
 
     public async Task<List<ErrorType>> GetErrorTypesForModule(int moduleId)
     {
-        return await Context.ErrorTypes.Where(errorType => errorType.ModuleId == moduleId).ToListAsync();
+        return await _context.ErrorTypes.Where(errorType => errorType.ModuleId == moduleId).ToListAsync();
     }
 
     public async Task<ErrorType> UpdateErrorType(ErrorTypeModel errType)
@@ -48,15 +49,15 @@ public class ErrorTypeDataService
         optModel.ErrorMessage = errType.ErrorMessage;
         optModel.Recoverable = errType.Recoverable;
         optModel.SequenceId = errType.SequenceId;
-        await Context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
         return optModel;
     }
 
     public async Task DeleteErrorType(ErrorTypeModel errType)
     {
         var errTypeModel = await GetErrorType(errType);
-        Context.ErrorTypes.Remove(errTypeModel);
-        await Context.SaveChangesAsync();
+        _context.ErrorTypes.Remove(errTypeModel);
+        await _context.SaveChangesAsync();
     }
 
     public async Task DeleteErrorTypes(IEnumerable<ErrorTypeModel> errTypes)
@@ -64,8 +65,8 @@ public class ErrorTypeDataService
         foreach (var err in errTypes)
         {
             var errTypeModel = await GetErrorType(err);
-            Context.ErrorTypes.Remove(errTypeModel);
+            _context.ErrorTypes.Remove(errTypeModel);
         }
-        await Context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
     }
 }

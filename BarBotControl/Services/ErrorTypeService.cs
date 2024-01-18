@@ -1,45 +1,46 @@
 ﻿using BarBotControl.Models;
+using BarBotControl.Services.Accessors;
 
 
 namespace BarBotControl.Services;
 
 public class ErrorTypeService
 {
-    private readonly ErrorTypeDataService ErrorTypeDataService;
+    private readonly ErrorTypeAccessor _errorTypeAccessor;
 
-    public ErrorTypeService(ErrorTypeDataService errorTypeDataService)
+    public ErrorTypeService(ErrorTypeAccessor errorTypeAccessor)
     {
-        ErrorTypeDataService = errorTypeDataService;
+        _errorTypeAccessor = errorTypeAccessor;
     }
 
     public async Task<ErrorTypeModel> AddErrorType(ErrorTypeModel errType)
     {
-        return new ErrorTypeModel(await ErrorTypeDataService.AddErrorType(errType));
+        return new ErrorTypeModel(await _errorTypeAccessor.AddErrorType(errType));
     }
 
     public async Task<ErrorTypeModel> GetErrorType(ErrorTypeModel errType)
     {
-        return new ErrorTypeModel(await ErrorTypeDataService.GetErrorType(errType));
+        return new ErrorTypeModel(await _errorTypeAccessor.GetErrorType(errType));
     }
 
     public async Task<List<ErrorTypeModel>> GetErrorTypesForModule(int moduleId)
     {
-        var models = await ErrorTypeDataService.GetErrorTypesForModule(moduleId);
+        var models = await _errorTypeAccessor.GetErrorTypesForModule(moduleId);
         return models.Select(o => new ErrorTypeModel(o)).ToList();
     }
 
     public async Task<ErrorTypeModel> UpdateErrorType(ErrorTypeModel errType)
     {
-        return new ErrorTypeModel(await ErrorTypeDataService.UpdateErrorType(errType));
+        return new ErrorTypeModel(await _errorTypeAccessor.UpdateErrorType(errType));
     }
 
     public async Task DeleteErrorType(ErrorTypeModel errType)
     {
-        await ErrorTypeDataService.DeleteErrorType(errType);
+        await _errorTypeAccessor.DeleteErrorType(errType);
     }
 
     public async Task DeleteErrorTypes(IEnumerable<ErrorTypeModel> errTypes)
     {
-        await ErrorTypeDataService.DeleteErrorTypes(errTypes);
+        await _errorTypeAccessor.DeleteErrorTypes(errTypes);
     }
 }

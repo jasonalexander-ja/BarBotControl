@@ -1,5 +1,5 @@
-﻿@inject NavigationManager Navigation
-@inject ISnackbar Snackbar
+﻿@inject NavigationManager _navigation
+@inject ISnackbar _snackbar
 
 <MudGrid Class="pb-4" Spacing="0">
     <MudItem sm="6" xs="12" Class="d-flex align-end">
@@ -51,7 +51,7 @@
                     <MudIconButton 
                         Icon="@Icons.Material.Filled.Edit"
                         aria-label="Edit"
-                        OnClick=@(() => Navigation.NavigateTo($"/Module/{ModuleId}/Option/{context.OptionId}"))
+                                       OnClick=@(() => _navigation.NavigateTo($"/Module/{ModuleId}/Option/{context.OptionId}"))
                         Size="Size.Small"
                         Color="Color.Primary"
                     />
@@ -83,7 +83,7 @@
                 <MudButton 
                     Variant="Variant.Filled" 
                     Color="Color.Primary" 
-                    OnClick=@(() => Navigation.NavigateTo($"/Module/{ModuleId}/OptionNew")) 
+                    OnClick=@(() => _navigation.NavigateTo($"/Module/{ModuleId}/OptionNew")) 
                     DisableElevation="true" 
                     FullWidth="true"
                     aria-label="New option"
@@ -122,7 +122,7 @@
     public EventCallback<bool> LoadingChanged { get; set; }
 
     [Parameter]
-    public OptionService OptionService { get; set; }
+    public OptionService _optionService { get; set; }
 
     [Parameter]
     public int ModuleId { get; set; }
@@ -153,18 +153,18 @@
         opt.IsActive = !opt.IsActive;
         try
         {
-            await OptionService.UpdateOption(opt);
-            Snackbar.Add("Toggled option. ", Severity.Success);
-            await OptionsChanged.InvokeAsync(await OptionService.GetOptionsForModule(ModuleId));
+            await _optionService.UpdateOption(opt);
+            _snackbar.Add("Toggled option. ", Severity.Success);
+            await OptionsChanged.InvokeAsync(await _optionService.GetOptionsForModule(ModuleId));
             StateHasChanged();
         }
         catch (ObjectNotFoundException)
         {
-            Snackbar.Add($"Hmmm, strange, couldn't find a option with the ID {opt.OptionId} on this module. ", Severity.Error);
+            _snackbar.Add($"Hmmm, strange, couldn't find a option with the ID {opt.OptionId} on this module. ", Severity.Error);
         }
         catch
         {
-            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
         }
     }
 
@@ -172,18 +172,18 @@
     {
         try
         {
-            await OptionService.DeleteOption(opt);
-            Snackbar.Add("Deleted module. ", Severity.Success);
-            await OptionsChanged.InvokeAsync(await OptionService.GetOptionsForModule(ModuleId));
+            await _optionService.DeleteOption(opt);
+            _snackbar.Add("Deleted module. ", Severity.Success);
+            await OptionsChanged.InvokeAsync(await _optionService.GetOptionsForModule(ModuleId));
             StateHasChanged();
         }
         catch (ObjectNotFoundException)
         {
-            Snackbar.Add($"Hmmm, strange, couldn't find a option with the ID {opt.ModuleId} on this module. ", Severity.Error);
+            _snackbar.Add($"Hmmm, strange, couldn't find a option with the ID {opt.ModuleId} on this module. ", Severity.Error);
         }
         catch
         {
-            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
         }
     }
 
@@ -191,18 +191,18 @@
     {
         try
         {
-            await OptionService.DeleteOptions(SelectedOptions);
-            Snackbar.Add("Deleted modules. ", Severity.Success);
-            await OptionsChanged.InvokeAsync(await OptionService.GetOptionsForModule(ModuleId));
+            await _optionService.DeleteOptions(SelectedOptions);
+            _snackbar.Add("Deleted modules. ", Severity.Success);
+            await OptionsChanged.InvokeAsync(await _optionService.GetOptionsForModule(ModuleId));
             StateHasChanged();
         }
         catch (ObjectNotFoundException ex)
         {
-            Snackbar.Add($"That was weird. {ex.Message}", Severity.Error);
+            _snackbar.Add($"That was weird. {ex.Message}", Severity.Error);
         }
         catch
         {
-            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
         }
     }
 

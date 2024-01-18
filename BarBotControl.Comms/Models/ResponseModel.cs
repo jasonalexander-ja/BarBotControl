@@ -9,14 +9,17 @@ public class ResponseModel
 	public ResponseModelType ResponseType { get; set; }
 	public WorkerExceptionBase? WorkerExceptionBase { get; set; }
 	public StatusUpdate? StatusUpdate { get; set; }
-	public ChannelWriter<ExceptionResponse>? ExceptionResponseWriter { get; set; }
+	public ChannelWriter<ExceptionResponse>? ExceptionResponseSender { get; set; }
 
-	public static ResponseModel ExceptionResponse(WorkerExceptionBase workerExceptionBase)
+	public static ResponseModel ExceptionResponse(
+		WorkerExceptionBase workerExceptionBase, 
+		ChannelWriter<ExceptionResponse> exceptionResponseSender)
 	{
 		return new ResponseModel() 
 		{
 			ResponseType = ResponseModelType.Exception,
-			WorkerExceptionBase = workerExceptionBase
+			WorkerExceptionBase = workerExceptionBase,
+			ExceptionResponseSender = exceptionResponseSender
 		};
 	}
 

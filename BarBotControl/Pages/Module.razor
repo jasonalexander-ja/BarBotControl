@@ -1,11 +1,11 @@
 ﻿@inherits AuthedPageBase
 @page "/Module/{ModuleIdStr}"
 
-@inject ModuleService ModuleService
-@inject OptionService OptionService
-@inject ErrorTypeService ErrorTypeService
-@inject ISnackbar Snackbar
-@inject NavigationManager Navigation
+@inject ModuleService _moduleService
+@inject OptionService _optionService
+@inject ErrorTypeService _errorTypeService
+@inject ISnackbar _snackbar
+@inject NavigationManager _navigation
 
 <PageTitle>Edit Module</PageTitle>
 
@@ -15,7 +15,7 @@
             <MudIconButton 
                 Icon="@Icons.Material.Filled.ArrowBack"
                 aria-label="Go Back"
-                OnClick=@(() => Navigation.NavigateTo("/Modules"))
+                OnClick=@(() => _navigation.NavigateTo("/Modules"))
                 Size="Size.Medium"
                 Color="Color.Secondary"
             />
@@ -106,7 +106,7 @@
                             Variant="Variant.Filled" 
                             Color="Color.Secondary"
                             aria-label="Go Back"
-                            OnClick=@(() => Navigation.NavigateTo("/Modules"))
+                            OnClick=@(() => _navigation.NavigateTo("/Modules"))
                             DisableElevation="true" 
                             FullWidth="true"
                         >
@@ -132,7 +132,7 @@
                 <OptionsView
                     @bind-Options="Options"
                     @bind-Loading="Loading"
-                    OptionService="OptionService"
+                    _optionService="_optionService"
                     ModuleId="Model.ModuleId"
                 />
             </MudTabPanel>
@@ -140,7 +140,7 @@
                 <ErrorTypesView
                     @bind-ErrorTypes="ErrTypes"
                     @bind-Loading="Loading"
-                    ErrorTypeService="ErrorTypeService"
+                    ErrorTypeService="_errorTypeService"
                     ModuleId="Model.ModuleId"
                 />
             </MudTabPanel>
@@ -166,26 +166,26 @@
     {
         if (!int.TryParse(ModuleIdStr, out var modId))
         {
-            Snackbar.Add("Incorrect formatted module Id. ", Severity.Warning);
-            Navigation.NavigateTo($"/Modules");
+            _snackbar.Add("Incorrect formatted module Id. ", Severity.Warning);
+            _navigation.NavigateTo($"/Modules");
             return;
         }
         ModuleId = modId;
         try
         {
-            Model = await ModuleService.GetModule(ModuleId);
-            Options = await OptionService.GetOptionsForModule(ModuleId);
-            ErrTypes = await ErrorTypeService.GetErrorTypesForModule(ModuleId);
+            Model = await _moduleService.GetModule(ModuleId);
+            Options = await _optionService.GetOptionsForModule(ModuleId);
+            ErrTypes = await _errorTypeService.GetErrorTypesForModule(ModuleId);
         }
         catch (ObjectNotFoundException)
         {
-            Snackbar.Add("That's weird, we can't find this module. ", Severity.Error);
-            Navigation.NavigateTo("/Modules");
+            _snackbar.Add("That's weird, we can't find this module. ", Severity.Error);
+            _navigation.NavigateTo("/Modules");
             return;
         }
         catch
         {
-            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
         }
         finally
         {
@@ -199,23 +199,23 @@
         await Form.Validate();
         if (!Form.IsValid)
         {
-            Snackbar.Add("Ensure all fields are correctly filled out. ", Severity.Warning);
+            _snackbar.Add("Ensure all fields are correctly filled out. ", Severity.Warning);
             return;
         }
         try
         {
-            await ModuleService.UpdateModule(Model);
-            Snackbar.Add("Successfully updated module. ", Severity.Success);
-            Navigation.NavigateTo($"/Modules");
+            await _moduleService.UpdateModule(Model);
+            _snackbar.Add("Successfully updated module. ", Severity.Success);
+            _navigation.NavigateTo($"/Modules");
         }
         catch (ObjectNotFoundException)
         {
-            Snackbar.Add("Strange, looks like this module has been deleted. ", Severity.Error);
-            Navigation.NavigateTo($"/Modules");
+            _snackbar.Add("Strange, looks like this module has been deleted. ", Severity.Error);
+            _navigation.NavigateTo($"/Modules");
         }
         catch
         {
-            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
         }
     }
 }

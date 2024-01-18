@@ -1,26 +1,26 @@
 ﻿using System.Security.Cryptography;
 using BarBotControl.Data;
 using BarBotControl.Config;
-using BarBotControl.Models;
 using BarBotControl.Exceptions.SudoUser;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using BarBotControl.Exceptions;
+using BarBotControl.Data.Models;
 
-namespace BarBotControl.Services;
+namespace BarBotControl.Services.Accessors;
 
-public class SudoUserDataService
+public class SudoUserAccessor
 {
-    private readonly AppDbContext Context;
+    private readonly AppDbContext _context;
 
-    public SudoUserDataService(AppDbContext context)
+    public SudoUserAccessor(AppDbContext context)
     {
-        Context = context;
+        _context = context;
     }
 
     public async Task<SudoUser> CreateUser(string userName, string passwordHash, byte[] salt)
     {
-        bool exists = await Context.SudoUsers.AnyAsync(u => u.UserName == userName);
+        bool exists = await _context.SudoUsers.AnyAsync(u => u.UserName == userName);
         if (exists)
         {
             throw new SudoUserExistsException("Already user with this name. ");
@@ -31,8 +31,8 @@ public class SudoUserDataService
             PasswordHash = passwordHash,
             PasswordSalt = salt
         };
-        await Context.SudoUsers.AddAsync(user);
-        await Context.SaveChangesAsync();
+        await _context.SudoUsers.AddAsync(user);
+        await _context.SaveChangesAsync();
         return user;
     }
 
@@ -41,18 +41,18 @@ public class SudoUserDataService
         var user = await GetUser(userName);
         user.PasswordHash = passwordHash;
         user.PasswordSalt = salt;
-        await Context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
         return user;
     }
 
     public async Task<bool> CanStartupSignIn()
     {
-        return !(await Context.SudoUsers.AnyAsync());
+        return !await _context.SudoUsers.AnyAsync();
     }
 
     public async Task<SudoUser> GetUser(string userName)
     {
-        var result = await Context.SudoUsers.FirstOrDefaultAsync(u => u.UserName == userName);
+        var result = await _context.SudoUsers.FirstOrDefaultAsync(u => u.UserName == userName);
         if (result == null)
         {
             throw new ObjectNotFoundException($"No user by {userName}. ");
@@ -62,14 +62,14 @@ public class SudoUserDataService
 
     public async Task<List<SudoUser>> GetUsers()
     {
-        return await Context.SudoUsers.ToListAsync();
+        return await _context.SudoUsers.ToListAsync();
     }
 
     public async Task DeleteUser(string userName)
     {
         var user = await GetUser(userName);
-        Context.SudoUsers.Remove(user);
-        await Context.SaveChangesAsync();
+        _context.SudoUsers.Remove(user);
+        await _context.SaveChangesAsync();
     }
 
     public async Task DeleteUsers(IEnumerable<string> userNames)
@@ -77,8 +77,8 @@ public class SudoUserDataService
         foreach (var userName in userNames)
         {
             var user = await GetUser(userName);
-            Context.SudoUsers.Remove(user);
+            _context.SudoUsers.Remove(user);
         }
-        await Context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
     }
 }

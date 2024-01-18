@@ -4,9 +4,9 @@
 @inherits AuthedPageBase
 @page "/Users"
 
-@inject SudoUserService UserService
-@inject ISnackbar Snackbar
-@inject NavigationManager Navigation
+@inject SudoUserService _userService
+@inject ISnackbar _snackbar
+@inject NavigationManager _navigation
 
 <PageTitle>Users</PageTitle>
 
@@ -45,7 +45,7 @@
             <MudIconButton 
                 Icon="@Icons.Material.Filled.Edit"
                 aria-label="Edit"
-                OnClick=@(() => Navigation.NavigateTo($"/User/{context.UserName}"))
+                OnClick=@(() => _navigation.NavigateTo($"/User/{context.UserName}"))
                 Size="Size.Medium"
                 Color="Color.Primary"
             />
@@ -74,7 +74,7 @@
         <MudButton 
             Variant="Variant.Filled" 
             Color="Color.Primary" 
-            OnClick=@(() => Navigation.NavigateTo("/UserNew")) 
+            OnClick=@(() => _navigation.NavigateTo("/UserNew")) 
             DisableElevation="true" 
             FullWidth="true"
             aria-label="New user"
@@ -128,18 +128,18 @@
     {
         try
         {
-            await UserService.DeleteUser(userName);
-            Snackbar.Add("Deleted user. ", Severity.Success);
-            Elements = await UserService.GetUsers();
+            await _userService.DeleteUser(userName);
+            _snackbar.Add("Deleted user. ", Severity.Success);
+            Elements = await _userService.GetUsers();
             StateHasChanged();
         }
         catch (SudoUserNotFoundException)
         {
-            Snackbar.Add($"Hmmm, strange, couldn't find a user by the name {userName}", Severity.Error);
+            _snackbar.Add($"Hmmm, strange, couldn't find a user by the name {userName}", Severity.Error);
         }
         catch
         {
-            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
         }
     }
 
@@ -147,18 +147,18 @@
     {
         try
         {
-            await UserService.DeleteUsers(SelectedItems);
-            Snackbar.Add("Deleted users. ", Severity.Success);
-            Elements = await UserService.GetUsers();
+            await _userService.DeleteUsers(SelectedItems);
+            _snackbar.Add("Deleted users. ", Severity.Success);
+            Elements = await _userService.GetUsers();
             StateHasChanged();
         }
         catch (SudoUserNotFoundException ex)
         {
-            Snackbar.Add($"That was weird. {ex.Message}", Severity.Error);
+            _snackbar.Add($"That was weird. {ex.Message}", Severity.Error);
         }
         catch
         {
-            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
         }
     }
 
@@ -166,11 +166,11 @@
     {
         try
         {
-            Elements = await UserService.GetUsers();
+            Elements = await _userService.GetUsers();
         }
         catch
         {
-            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
         }
         finally
         {

@@ -2,9 +2,9 @@
 @inherits AuthedPageBase
 @page "/SequenceNew"
 
-@inject SequenceService SequenceService
-@inject ISnackbar Snackbar
-@inject NavigationManager Navigation
+@inject SequenceService _sequenceService
+@inject ISnackbar _snackbar
+@inject NavigationManager _navigation
 
 <PageTitle>New Sequence</PageTitle>
 
@@ -14,7 +14,7 @@
             <MudIconButton 
                 Icon="@Icons.Material.Filled.ArrowBack"
                 aria-label="Go Back"
-                OnClick=@(() => Navigation.NavigateTo("/"))
+                OnClick=@(() => _navigation.NavigateTo("/"))
                 Size="Size.Medium"
                 Color="Color.Secondary"
             />
@@ -75,7 +75,7 @@
                             Variant="Variant.Filled" 
                             Color="Color.Secondary"
                             aria-label="Go Back"
-                            OnClick=@(() => Navigation.NavigateTo("/"))
+                            OnClick=@(() => _navigation.NavigateTo("/"))
                             DisableElevation="true" 
                             FullWidth="true"
                         >
@@ -98,18 +98,18 @@
         await Form.Validate();
         if (!Form.IsValid)
         {
-            Snackbar.Add("Ensure all fields are correctly filled out. ", Severity.Warning);
+            _snackbar.Add("Ensure all fields are correctly filled out. ", Severity.Warning);
             return;
         }
         try
         {
-            var newSequence = await SequenceService.AddSequence(Model);
-            Snackbar.Add("Sequence created. ", Severity.Success);
-            Navigation.NavigateTo($"/Sequence/{newSequence.SequenceId}");
+            var newSequence = await _sequenceService.AddSequence(Model);
+            _snackbar.Add("Sequence created. ", Severity.Success);
+            _navigation.NavigateTo($"/Sequence/{newSequence.SequenceId}");
         }
         catch
         {
-            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
         }
     }
 }

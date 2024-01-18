@@ -4,9 +4,9 @@
 @inherits AuthedPageBase
 @page "/Modules"
 
-@inject ModuleService ModuleService
-@inject ISnackbar Snackbar
-@inject NavigationManager Navigation
+@inject ModuleService _moduleService
+@inject ISnackbar _snackbar
+@inject NavigationManager _navigation
 @inject IJSRuntime JS
 
 <PageTitle>Modules</PageTitle>
@@ -61,8 +61,8 @@
             <MudIconButton 
                 Icon="@Icons.Material.Filled.Edit"
                 aria-label="Edit"
-                OnClick=@(() => Navigation.NavigateTo($"/Module/{context.ModuleId}"))
-                               Size="Size.Medium"
+                OnClick=@(() => _navigation.NavigateTo($"/Module/{context.ModuleId}"))
+                Size="Size.Medium"
                 Color="Color.Primary"
             />
             <MudIconButton 
@@ -90,7 +90,7 @@
         <MudButton 
             Variant="Variant.Filled" 
             Color="Color.Primary" 
-            OnClick=@(() => Navigation.NavigateTo("/ModuleNew")) 
+            OnClick=@(() => _navigation.NavigateTo("/ModuleNew")) 
             DisableElevation="true" 
             FullWidth="true"
             aria-label="New module"
@@ -151,18 +151,18 @@
         module.IsActive = !module.IsActive;
         try
         {
-            await ModuleService.UpdateModule(module);
-            Snackbar.Add("Toggled module. ", Severity.Success);
-            Elements = await ModuleService.GetModules();
+            await _moduleService.UpdateModule(module);
+            _snackbar.Add("Toggled module. ", Severity.Success);
+            Elements = await _moduleService.GetModules();
             StateHasChanged();
         }
         catch (ObjectNotFoundException)
         {
-            Snackbar.Add($"Hmmm, strange, couldn't find a module with the ID {module.ModuleId}", Severity.Error);
+            _snackbar.Add($"Hmmm, strange, couldn't find a module with the ID {module.ModuleId}", Severity.Error);
         }
         catch
         {
-            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
         }
     }
 
@@ -170,18 +170,18 @@
     {
         try
         {
-            await ModuleService.DeleteModule(module);
-            Snackbar.Add("Deleted module. ", Severity.Success);
-            Elements = await ModuleService.GetModules();
+            await _moduleService.DeleteModule(module);
+            _snackbar.Add("Deleted module. ", Severity.Success);
+            Elements = await _moduleService.GetModules();
             StateHasChanged();
         }
         catch (ObjectNotFoundException)
         {
-            Snackbar.Add($"Hmmm, strange, couldn't find a module with the ID {module.ModuleId}", Severity.Error);
+            _snackbar.Add($"Hmmm, strange, couldn't find a module with the ID {module.ModuleId}", Severity.Error);
         }
         catch
         {
-            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
         }
     }
 
@@ -189,18 +189,18 @@
     {
         try
         {
-            await ModuleService.DeleteModules(SelectedItems);
-            Snackbar.Add("Deleted modules. ", Severity.Success);
-            Elements = await ModuleService.GetModules();
+            await _moduleService.DeleteModules(SelectedItems);
+            _snackbar.Add("Deleted modules. ", Severity.Success);
+            Elements = await _moduleService.GetModules();
             StateHasChanged();
         }
         catch (ObjectNotFoundException ex)
         {
-            Snackbar.Add($"That was weird. {ex.Message}", Severity.Error);
+            _snackbar.Add($"That was weird. {ex.Message}", Severity.Error);
         }
         catch
         {
-            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
         }
     }
 
@@ -208,11 +208,11 @@
     {
         try
         {
-            Elements = await ModuleService.GetModules();
+            Elements = await _moduleService.GetModules();
         }
         catch
         {
-            Snackbar.Add("Something went reallt wrong, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went reallt wrong, go yell at Jason. ", Severity.Error);
         }
         finally
         {

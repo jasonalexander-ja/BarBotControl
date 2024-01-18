@@ -2,9 +2,9 @@
 
 @page "/InactiveSequences"
 
-@inject SequenceService SequenceService
-@inject ISnackbar Snackbar
-@inject NavigationManager Navigation
+@inject SequenceService _sequenceService
+@inject ISnackbar _snackbar
+@inject NavigationManager _navigation
 
 <PageTitle>Inactive Sequences</PageTitle>
 
@@ -37,7 +37,7 @@
                             <MudIconButton
                                 Icon="@Icons.Material.Filled.Edit"
                                 aria-label="Edit"
-                                OnClick=@(() => Navigation.NavigateTo($"/Sequence/{seq.SequenceId}"))
+                                OnClick=@(() => _navigation.NavigateTo($"/Sequence/{seq.SequenceId}"))
                                 Color="Color.Secondary"
                             />
                         </MudCardActions>
@@ -84,13 +84,13 @@
     {
         try
         {
-            Sequences = await SequenceService.GetInactiveSequences();
+            Sequences = await _sequenceService.GetInactiveSequences();
             Loading = false;
             StateHasChanged();
         }
         catch
         {
-            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
         }
         
     }

@@ -2,9 +2,9 @@
 @inherits AuthedPageBase
 @page "/ModuleNew"
 
-@inject ModuleService ModuleService
-@inject ISnackbar Snackbar
-@inject NavigationManager Navigation
+@inject ModuleService _moduleService
+@inject ISnackbar _snackbar
+@inject NavigationManager _navigation
 
 <PageTitle>New Module</PageTitle>
 
@@ -14,7 +14,7 @@
             <MudIconButton 
                 Icon="@Icons.Material.Filled.ArrowBack"
                 aria-label="Go Back"
-                OnClick=@(() => Navigation.NavigateTo("/Modules"))
+                           OnClick=@(() => _navigation.NavigateTo("/Modules"))
                 Size="Size.Medium"
                 Color="Color.Secondary"
             />
@@ -81,7 +81,7 @@
                             Variant="Variant.Filled" 
                             Color="Color.Secondary"
                             aria-label="Go Back"
-                            OnClick=@(() => Navigation.NavigateTo("/Modules"))
+                            OnClick=@(() => _navigation.NavigateTo("/Modules"))
                             DisableElevation="true" 
                             FullWidth="true"
                         >
@@ -104,18 +104,18 @@
         await Form.Validate();
         if (!Form.IsValid)
         {
-            Snackbar.Add("Ensure all fields are correctly filled out. ", Severity.Warning);
+            _snackbar.Add("Ensure all fields are correctly filled out. ", Severity.Warning);
             return;
         }
         try
         {
-            var result = await ModuleService.CreateModule(Model);
-            Snackbar.Add("Successfully created module. ", Severity.Success);
-            Navigation.NavigateTo($"/Module/{result.ModuleId}");
+            var result = await _moduleService.CreateModule(Model);
+            _snackbar.Add("Successfully created module. ", Severity.Success);
+            _navigation.NavigateTo($"/Module/{result.ModuleId}");
         }
         catch
         {
-            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
         }
     }
 }

@@ -1,32 +1,33 @@
 ﻿using BarBotControl.Data;
+using BarBotControl.Data.Models;
 using BarBotControl.Exceptions;
 using BarBotControl.Models;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace BarBotControl.Services;
+namespace BarBotControl.Services.Accessors;
 
-public class SequenceItemDataService
+public class SequenceItemAccessor
 {
-    private readonly AppDbContext Context;
+    private readonly AppDbContext _context;
 
-    public SequenceItemDataService(AppDbContext context)
+    public SequenceItemAccessor(AppDbContext context)
     {
-        Context = context;
+        _context = context;
     }
 
     public async Task<SequenceItem> AddSequenceItem(SequenceItemModel opt)
     {
         var seqItemModel = new SequenceItem(opt);
-        Context.SequenceItem.Add(seqItemModel);
-        await Context.SaveChangesAsync();
+        _context.SequenceItem.Add(seqItemModel);
+        await _context.SaveChangesAsync();
         return seqItemModel;
     }
 
     public async Task<SequenceItem> GetSequenceItem(int seqId)
     {
-        var sequenceModel = await Context.SequenceItem.FirstOrDefaultAsync(o => o.SequenceItemId == seqId);
-        if (sequenceModel is null) 
+        var sequenceModel = await _context.SequenceItem.FirstOrDefaultAsync(o => o.SequenceItemId == seqId);
+        if (sequenceModel is null)
         {
             throw new ObjectNotFoundException($"Cannot find sequence `{seqId}`. ");
         }
@@ -35,19 +36,19 @@ public class SequenceItemDataService
 
     public async Task<List<SequenceItem>> GetSequenceItems()
     {
-        return await Context.SequenceItem.ToListAsync();
+        return await _context.SequenceItem.ToListAsync();
     }
 
     public async Task<List<SequenceItem>> GetItemsForSeq(int seqId)
     {
-        return await Context.SequenceItem
+        return await _context.SequenceItem
             .Where(s => s.SequenceId == seqId)
             .ToListAsync();
     }
 
     public async Task<List<SequenceItem>> GetItemsForSeqWithModuleOpt(int seqId)
     {
-        return await Context.SequenceItem
+        return await _context.SequenceItem
             .Include(s => s.Option)
             .Include(s => s.Module)
             .Where(s => s.SequenceId == seqId)
@@ -56,7 +57,7 @@ public class SequenceItemDataService
 
     public async Task<List<SequenceItemDescModel>> GetItemDescriptionsForSeq(int seqId)
     {
-        return await Context.SequenceItem
+        return await _context.SequenceItem
             .Where(s => s.SequenceId == seqId)
             .Select(s => new SequenceItemDescModel(s.SequenceItemId, s.Index, $"{s.Module.Name}: {s.Option.Name}"))
             .ToListAsync();
@@ -64,10 +65,10 @@ public class SequenceItemDataService
 
     public async Task<int> GetHighestIndexForSeq(int seqId)
     {
-        if (!await Context.SequenceItem
+        if (!await _context.SequenceItem
                 .Where(s => s.SequenceId == seqId).AnyAsync())
             return 0;
-        return await Context.SequenceItem
+        return await _context.SequenceItem
             .Where(s => s.SequenceId == seqId)
             .MaxAsync(x => x.Index);
     }
@@ -76,15 +77,15 @@ public class SequenceItemDataService
     {
         var seqItemModel = await GetSequenceItem(seq.SequenceItemId);
         seqItemModel.Index = seq.Index;
-        await Context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
         return seqItemModel;
     }
 
     public async Task DeleteSequenceItem(int seqItemId)
     {
         var seqItemModel = await GetSequenceItem(seqItemId);
-        Context.SequenceItem.Remove(seqItemModel);
-        await Context.SaveChangesAsync();
+        _context.SequenceItem.Remove(seqItemModel);
+        await _context.SaveChangesAsync();
     }
 
     public async Task DeleteSequenceItems(IEnumerable<int> seqItemIds)
@@ -92,8 +93,8 @@ public class SequenceItemDataService
         foreach (var id in seqItemIds)
         {
             var sequenceModel = await GetSequenceItem(id);
-            Context.SequenceItem.Remove(sequenceModel);
+            _context.SequenceItem.Remove(sequenceModel);
         }
-        await Context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
     }
 }

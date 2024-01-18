@@ -10,32 +10,32 @@ namespace BarBotControl.Shared;
 public class AuthedPageBase : ComponentBase
 {
     [Inject]
-    private SessionService SessionService { get; set; }
+    private SessionService _sessionService { get; set; }
     [Inject]
-    private ILocalStorageService LocalStorage { get; set; }
+    private ILocalStorageService _localStorage { get; set; }
     [Inject]
-    private NavigationManager Navigation { get; set; }
+    private NavigationManager _navigation { get; set; }
     [Inject]
-    private ISnackbar Snackbar { get; set; }
+    private ISnackbar _snackbar { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        string token = await LocalStorage.GetItemAsStringAsync(SessionKeys.SessionTokenKey) ?? "";
+        string token = await _localStorage.GetItemAsStringAsync(SessionKeys.SessionTokenKey) ?? "";
 
         var isAuthed = false;
         try
         {
-            isAuthed = SessionService.CheckSession(token);
+            isAuthed = _sessionService.CheckSession(token);
         }
         catch (TimedOutException)
         {
-            Snackbar.Add("Session timed out. ", Severity.Warning);
-            Navigation.NavigateTo("SudoIn");
+            _snackbar.Add("Session timed out. ", Severity.Warning);
+            _navigation.NavigateTo("SudoIn");
             return;
         }
         if (!isAuthed)
         {
-            Navigation.NavigateTo("SudoIn");
+            _navigation.NavigateTo("SudoIn");
             return;
         }
 

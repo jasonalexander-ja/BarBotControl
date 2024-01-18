@@ -2,9 +2,9 @@
 @inherits AuthedPageBase
 @page "/User/{UserName}"
 
-@inject SudoUserService UserService
-@inject ISnackbar Snackbar
-@inject NavigationManager Navigation
+@inject SudoUserService _userService
+@inject ISnackbar _snackbar
+@inject NavigationManager _navigation
 
 <PageTitle>Edit User</PageTitle>
 
@@ -14,7 +14,7 @@
             <MudIconButton 
                 Icon="@Icons.Material.Filled.ArrowBack"
                 aria-label="Go Back"
-                OnClick=@(() => Navigation.NavigateTo("/Users"))
+                           OnClick=@(() => _navigation.NavigateTo("/Users"))
                 Size="Size.Medium"
                 Color="Color.Secondary"
             />
@@ -127,24 +127,24 @@
         await Form.Validate();
         if (!Form.IsValid)
         {
-            Snackbar.Add("Please specify a password. ", Severity.Warning);
+            _snackbar.Add("Please specify a password. ", Severity.Warning);
             return;
         }
         try
         {
-            await UserService.UpdatePassword(UserName, Password);
-            Snackbar.Add("Updated password. ", Severity.Success);
+            await _userService.UpdatePassword(UserName, Password);
+            _snackbar.Add("Updated password. ", Severity.Success);
             Password = "";
             StateHasChanged();
         }
         catch (SudoUserNotFoundException)
         {
-            Snackbar.Add("That's weird, we can't find this user. ", Severity.Error);
-            Navigation.NavigateTo("/Users");
+            _snackbar.Add("That's weird, we can't find this user. ", Severity.Error);
+            _navigation.NavigateTo("/Users");
         }
         catch
         {
-            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
         }
     }
 
@@ -152,18 +152,18 @@
     {
         try
         {
-            await UserService.DeleteUser(UserName);
-            Snackbar.Add("Successfully deleted user. ", Severity.Success);
-            Navigation.NavigateTo("Users");
+            await _userService.DeleteUser(UserName);
+            _snackbar.Add("Successfully deleted user. ", Severity.Success);
+            _navigation.NavigateTo("Users");
         }
         catch (SudoUserNotFoundException)
         {
-            Snackbar.Add("That's weird, we can't find this user. ", Severity.Error);
-            Navigation.NavigateTo("Users");
+            _snackbar.Add("That's weird, we can't find this user. ", Severity.Error);
+            _navigation.NavigateTo("Users");
         }
         catch
         {
-            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
         }
     }
 
@@ -171,17 +171,17 @@
     {
         try
         {
-            SudoUser = await UserService.GetUser(UserName);
+            SudoUser = await _userService.GetUser(UserName);
         }
         catch (SudoUserNotFoundException)
         {
-            Snackbar.Add("No such user by that name. ", Severity.Warning);
-            Navigation.NavigateTo("/Users");
+            _snackbar.Add("No such user by that name. ", Severity.Warning);
+            _navigation.NavigateTo("/Users");
             return;
         }
         catch
         {
-            Snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
         }
         finally
         {

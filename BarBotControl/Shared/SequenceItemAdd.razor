@@ -1,5 +1,5 @@
-﻿@inject ISnackbar Snackbar
-@inject NavigationManager Navigation
+﻿@inject ISnackbar _snackbar
+@inject NavigationManager _navigation
 
 <MudGrid Class="pb-2" Spacing="0" Justify="Justify.Center">
     <MudItem xs="12" sm="7">
@@ -65,7 +65,7 @@
 
 @code {
     [Parameter]
-    public SequenceItemService SequenceItemService { get; set; } = null!;
+    public SequenceItemService _sequenceItemService { get; set; } = null!;
 
     [Parameter]
     public List<ModuleModel> Modules { get; set; } = new List<ModuleModel>();
@@ -97,7 +97,7 @@
     {
         if (Module is null || Option is null)
         {
-            Snackbar.Add("Please select a module and option. ");
+            _snackbar.Add("Please select a module and option. ");
             return;
         }
         int index = SequenceItems.Any() ? SequenceItems.Max(m => m.Index) : 0;
@@ -111,12 +111,12 @@
         };
         try
         {
-            await SequenceItemService.AddSequence(item);
-            await SequenceItemsChanged.InvokeAsync(await SequenceItemService.GetItemsForSeqWithModuleOpt(SequenceId));
+            await _sequenceItemService.AddSequence(item);
+            await SequenceItemsChanged.InvokeAsync(await _sequenceItemService.GetItemsForSeqWithModuleOpt(SequenceId));
         }
         catch
         {
-            Snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
+            _snackbar.Add("Something went wrong there, go yell at Jason. ", Severity.Error);
         }
         StateHasChanged();
     }
