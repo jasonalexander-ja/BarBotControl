@@ -1,67 +1,19 @@
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using MudBlazor.Services;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Threading;
-using System.Threading.Channels;
 using Blazored.LocalStorage;
-using BarBotControl.Data;
-using BarBotControl.Config;
-using BarBotControl.Services;
-using Microsoft.Extensions.DependencyInjection;
-using BarBotControl.Services.Accessors;
+using BarBotControl.Extensions;
 
 
 var builder = WebApplication.CreateBuilder(args);
 
 StaticWebAssetsLoader.UseStaticWebAssets(builder.Environment, builder.Configuration);
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+builder.AddDatabase();
+builder.AddDataServices();
 
-var serverVersion = new MySqlServerVersion(new Version(11, 2, 2));
+builder.AddSudoUserService();
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-	options.UseMySql(connectionString, serverVersion)
-		.LogTo(Console.WriteLine, LogLevel.Information)
-		.EnableSensitiveDataLogging()
-		.EnableDetailedErrors()
-);
-
-builder.Services.AddSingleton(
-	builder.Configuration.GetRequiredSection("SudoUserConfig")
-	.Get<SudoUserConfig>());
-builder.Services.AddSingleton<SessionService>();
-
-builder.Services.AddScoped<SudoUserAccessor>();
-builder.Services.AddScoped<SudoUserService>();
-
-builder.Services.AddScoped<ModuleAccessor>();
-builder.Services.AddScoped<ModuleService>();
-
-builder.Services.AddScoped<OptionAccessor>();
-builder.Services.AddScoped<OptionService>();
-
-builder.Services.AddScoped<ErrorTypeAccessor>();
-builder.Services.AddScoped<ErrorTypeService>();
-
-builder.Services.AddScoped<SequenceAccessor>();
-builder.Services.AddScoped<SequenceService>();
-
-builder.Services.AddScoped<SequenceItemAccessor>();
-builder.Services.AddScoped<SequenceItemService>();
-
-
-
-
-var concurrentService = new ConcurrentService();
-
-builder.Services.AddSingleton(concurrentService);
-
-
-
-
+builder.AddWorker();
 
 // Add services to the container.
 builder.Services.AddRazorPages();

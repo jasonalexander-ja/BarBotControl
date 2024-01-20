@@ -1,21 +1,26 @@
 ﻿using BarBotControl.Worker.Models;
 using BarBotControl.Comms.Models;
 using BarBotControl.Comms.Exceptions;
-using System.Device.I2c;
 using System.Threading.Channels;
 
 namespace BarBotControl.Comms.Worker;
 
-public static class Worker
+public static class CommsWorker
 {
-	public static TimeSpan Timeout = TimeSpan.FromSeconds(3600);
-	public static int I2CChannel = 1;
+	public static WorkerConfig Config { get; set; } = new WorkerConfig();
 
-	public static async Task Run(Request<RequestModel, ResponseModel> request)
+    public static async Task Run(Request<RequestModel, ResponseModel> request)
 	{
 		var sequenceItems = request.RequestBody.WorkerSequenceItems;
 		await RunSequence(sequenceItems, request.ResponseWriter);
-		request.ResponseWriter.Complete();
+		try
+        {
+            request.ResponseWriter.Complete();
+        }
+		catch
+		{
+			// User disconnected 
+		}
 	}
 
 	private static async Task RunSequence(List<WorkerSequenceItem> sequenceItems, 
@@ -25,8 +30,8 @@ public static class Worker
 		{
 			try
 			{
-				Dispatch(seqItem);
-			}
+                Dispatch(seqItem);
+            }
 			catch (WorkerExceptionBase ex)
 			{
 				var response = await HandleException(ex, responseWriter);
@@ -42,17 +47,26 @@ public static class Worker
 		ChannelWriter<Response<ResponseModel>> responseWriter)
 	{
 		var responseChannel = Channel.CreateUnbounded<ExceptionResponse>();
-		await responseWriter.WriteAsync(Response<ResponseModel>.WorkerMessage(
-			ResponseModel.ExceptionResponse(ex, responseChannel.Writer)
-		));
-		return await responseChannel.Reader.ReadAsync();
+		try
+		{
+			await responseWriter.WriteAsync(Response<ResponseModel>.WorkerMessage(
+				ResponseModel.ExceptionResponse(ex, responseChannel.Writer)
+			));
+            return await responseChannel.Reader.ReadAsync();
+        }
+		catch
+		{
+			return ExceptionResponse.PerformSequenceHalt(Config.DefaultResetRoutine);
+        }
 	}
 
 	private static void Dispatch(WorkerSequenceItem item)
 	{
 		try
 		{
-			I2cDevice i2c = I2cDevice.Create(new I2cConnectionSettings(I2CChannel, item.ModuleAddress));
+            II2cWrapper i2c = Config.MockI2c 
+				? new I2cMock(item.ModuleAddress, Config) 
+				: new I2cWrapper(item.ModuleAddress, Config.I2cChannel);
 			i2c.WriteByte(Convert.ToByte(item.Option));
 			var result = TryRead(i2c, item);
 			if (result != 0)
@@ -66,29 +80,16 @@ public static class Worker
 		}
 		catch (IOException ex)
 		{
-			throw new I2cCommunicationException(I2CChannel, item.ModuleAddress, ex);
+			throw new I2cCommunicationException(Config.I2cChannel, item.ModuleAddress, ex);
 		}
 	}
 
-	private static I2cDevice OpenI2cDevices(int address)
+	private static int TryRead(II2cWrapper i2c, WorkerSequenceItem item)
 	{
-		try
-		{
-			return I2cDevice.Create(new I2cConnectionSettings(I2CChannel, address));
-		}
-		catch (IOException ex)
-		{
-			throw new OpeningI2cException(address, ex);
-		}
-	}
-
-	private static int TryRead(I2cDevice i2c, WorkerSequenceItem item)
-	{
-		var timeOutTime = DateTime.Now + Timeout;
+		var timeOutTime = DateTime.Now + TimeSpan.FromSeconds(Config.TimeoutSeconds);
 		while (true)
 		{
-			byte[] res = {0, 0};
-			i2c.Read(res);
+			byte[] res = i2c.Read();
 			if (res.FirstOrDefault((byte)0) == 1)
 			{
 				return res.LastOrDefault((byte)0);

@@ -27,4 +27,9 @@
     <Folder Include="Migrations\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\BarBotControl.Comms\BarBotControl.Comms.csproj" />
+    <ProjectReference Include="..\BarBotControl.Worker\BarBotControl.Worker.csproj" />
+  </ItemGroup>
+
 </Project>
