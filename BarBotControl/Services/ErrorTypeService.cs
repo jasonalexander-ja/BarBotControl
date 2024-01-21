@@ -23,6 +23,11 @@ public class ErrorTypeService
         return new ErrorTypeModel(await _errorTypeAccessor.GetErrorType(errType));
     }
 
+    public async Task<ErrorTypeModel> GetErrorTypeForModuleValue(int moduleId, int value)
+    {
+        return new ErrorTypeModel(await _errorTypeAccessor.GetErrorTypeForModuleValue(moduleId, value));
+    }
+
     public async Task<List<ErrorTypeModel>> GetErrorTypesForModule(int moduleId)
     {
         var models = await _errorTypeAccessor.GetErrorTypesForModule(moduleId);

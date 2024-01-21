@@ -9,12 +9,15 @@ namespace BarBotControl.Comms.Exceptions;
 
 public class I2cCommunicationException : WorkerExceptionBase
 {
-	public int I2cChannel { get; set; }
+	public int SequenceIndex { get; set; }
+    public int I2cChannel { get; set; }
 	public int I2cAddress { get; set; }
-	public I2cCommunicationException(int i2cChannel, int i2cAddress, Exception innerException)
+	public I2cCommunicationException(int sequenceIndex, int i2cChannel, int i2cAddress, Exception innerException)
 		: base($"Error opening I2C channel {i2cChannel}. ", innerException)
 	{
 		I2cChannel = i2cChannel;
 		I2cAddress = i2cAddress;
-	}
+		SequenceIndex = sequenceIndex;
+
+    }
 }

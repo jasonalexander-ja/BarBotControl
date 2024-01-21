@@ -26,9 +26,9 @@ public class I2cMock : II2cWrapper
 
     public byte[] Read()
     {
-        int delaySettings = I2cMockSetting?.DelaySeconds ?? DelaySeconds;
+        int delaySeconds = I2cMockSetting is not null ? I2cMockSetting.DelaySeconds : DelaySeconds;
         int ret = I2cMockSetting?.Return ?? Return;
-        if (DateTime.Now >= WrittenTime.AddSeconds(delaySettings))
+        if (DateTime.Now >= WrittenTime.AddSeconds(delaySeconds))
         {
             return new byte[] { 1, Convert.ToByte(ret) };
         }

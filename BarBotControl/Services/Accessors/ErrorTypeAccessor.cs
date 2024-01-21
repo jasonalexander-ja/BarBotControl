@@ -33,7 +33,18 @@ public class ErrorTypeAccessor
             o => o.ErrorTypeId == errType.ErrorTypeId && o.ModuleId == errType.ModuleId);
         if (errorTypeModel is null)
         {
-            throw new ObjectNotFoundException($"Cannot find module `{errType.ErrorMessage}` on module. ");
+            throw new ObjectNotFoundException($"Cannot find error type `{errType.ErrorMessage}` on module. ");
+        }
+        return errorTypeModel;
+    }
+
+    public async Task<ErrorType> GetErrorTypeForModuleValue(int moduleId, int value)
+    {
+        var errorTypeModel = await _context.ErrorTypes.FirstOrDefaultAsync(
+            o => o.ModuleId == moduleId && o.ErrorValue == value);
+        if (errorTypeModel is null)
+        {
+            throw new ObjectNotFoundException($"Cannot find error value `{value}` on module id `{moduleId}`. ");
         }
         return errorTypeModel;
     }

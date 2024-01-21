@@ -5,12 +5,14 @@ namespace BarBotControl.Worker.Models;
 public class Request<TReq, TRes>
 {
 	public ChannelWriter<Response<TRes>> ResponseWriter { get; set; }
-	public TReq RequestBody { get; set; }
+	public string IdempotencyKey { get; set; } = string.Empty;
+    public TReq RequestBody { get; set; }
 
 
-	public Request(ChannelWriter<Response<TRes>> responseWriter, TReq requestBody)
+	public Request(ChannelWriter<Response<TRes>> responseWriter, string idpKey, TReq requestBody)
 	{
 		ResponseWriter = responseWriter;
-		RequestBody = requestBody;
+        IdempotencyKey = idpKey;
+        RequestBody = requestBody;
 	}
 }

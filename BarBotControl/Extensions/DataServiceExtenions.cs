@@ -25,6 +25,8 @@ public static class DataServiceExtenions
         builder.Services.AddScoped<SequenceItemAccessor>();
         builder.Services.AddScoped<SequenceItemService>();
 
+        builder.Services.AddScoped<ErrorHandlingService>();
+
         return builder;
     }
 }

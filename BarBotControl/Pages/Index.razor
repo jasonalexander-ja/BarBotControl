@@ -1,9 +1,11 @@
-﻿@page "/"
+﻿@using BarBotControl.Config
 
+@page "/"
 
 @inject SequenceService _sequenceService
 @inject ISnackbar _snackbar
 @inject NavigationManager _navigation
+@inject ILocalStorageService _localStorage
 
 <PageTitle>Sequences</PageTitle>
 
@@ -36,7 +38,7 @@
                             <MudIconButton
                                 Icon="@Icons.Material.Filled.PlayArrow"
                                 aria-label="Run"
-                                OnClick=@(() => _navigation.NavigateTo($"/Run/{seq.SequenceId}"))
+                                OnClick=@(() => RunSequence(seq))
                                 Color="Color.Primary"
                             />
                             <SudoView>
@@ -75,7 +77,7 @@
     public bool Loading { get; set; } = true;
 
     public List<SequenceModel> Sequences { get; set; } = new ();
-    
+
     private bool Filter(SequenceModel element) => FilterFunc(element, SearchString);
 
     private bool FilterFunc(SequenceModel element, string searchString)
@@ -87,6 +89,13 @@
         if (element.Description.Contains(searchString, StringComparison.OrdinalIgnoreCase))
             return true;
         return false;
+    }
+
+    public async Task RunSequence(SequenceModel seq)
+    {
+        string idpToken = Guid.NewGuid().ToString();
+        await _localStorage.SetItemAsStringAsync(SessionKeys.RequestIdempotencyKey, idpToken);
+        _navigation.NavigateTo($"/Run/{seq.SequenceId}");
     }
 
     protected override async Task OnInitializedAsync()

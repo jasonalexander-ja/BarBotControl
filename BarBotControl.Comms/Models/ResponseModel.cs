@@ -32,7 +32,7 @@ public class ResponseType
     public class WorkerException : ResponseType
     {
         public WorkerExceptionBase WorkerExceptionBase { get; set; }
-        public ChannelWriter<ExceptionResponse>? ExceptionResponseSender { get; set; }
+        public ChannelWriter<ExceptionResponse> ExceptionResponseSender { get; set; }
 
 		public WorkerException(
 			WorkerExceptionBase workerExceptionBase,

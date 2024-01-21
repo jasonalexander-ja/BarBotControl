@@ -68,11 +68,17 @@ public class SequenceAccessor
             .ToListAsync();
     }
 
-    public async Task<List<Sequence>> GetSequencesWithItems()
+    public async Task<Sequence> GetSequenceForErrType(int moduleId, int value)
     {
-        return await _context.Sequences
-            .Include(s => s.SequenceItems)
-            .ToListAsync();
+        var sequenceModel = await _context.Sequences
+            .Where(s => s.ErrorTypes.Any(e => 
+                e.ModuleId == moduleId && e.ErrorValue == value))
+            .FirstOrDefaultAsync();
+        if (sequenceModel is null)
+        {
+            throw new ObjectNotFoundException($"Cannot find sequence for error value `{value}` on module id `{moduleId}`. ");
+        }
+        return sequenceModel;
     }
 
     public async Task<Sequence> UpdateSequence(SequenceModel seq)

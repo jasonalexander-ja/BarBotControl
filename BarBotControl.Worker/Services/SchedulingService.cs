@@ -46,12 +46,16 @@ public class SchedulingService<TReq, TRes>
 			var isReq = requestReceiver.TryRead(out var req);
 			if (isReq && req is not null)
 			{
-				if (requests.Count() < QueueLimmit)
-				{
-					await SendScheduleMessage(req, requests.Count() + 1);
-					requests.Enqueue(req);
-				}
-				else
+                if (requests.Any(r => r.IdempotencyKey == req.IdempotencyKey))
+                {
+                    await SendAlreadyScheduledMessage(req);
+                }
+                else if (requests.Count() < QueueLimmit)
+                {
+                    await SendScheduleMessage(req, requests.Count() + 1);
+                    requests.Enqueue(req);
+                }
+                else
 				{
 					await SendScheduleFullMessage(req);
                 }
@@ -75,29 +79,33 @@ public class SchedulingService<TReq, TRes>
 		}
     }
 
+    private async Task SendAlreadyScheduledMessage(Request<TReq, TRes> req)
+    {
+        var schedMessage = new Response<TRes>.AlreadyScheduled<TRes>();
+        await SendMessage(req, schedMessage);
+    }
+
     private async Task SendScheduleFullMessage(Request<TReq, TRes> req)
     {
         var schedMessage = new Response<TRes>.SchedulerLimmit<TRes>();
+        await SendMessage(req, schedMessage);
+    }
+
+    private async Task SendScheduleMessage(Request<TReq, TRes> req, int pos)
+	{
+		var schedMessage = new Response<TRes>.SchedulerMessage<TRes>(pos);
+		await SendMessage(req, schedMessage);
+    }
+
+	private async Task SendMessage(Request<TReq, TRes> req, Response<TRes> response)
+	{
         try
         {
-            await req.ResponseWriter.WriteAsync(schedMessage);
+            await req.ResponseWriter.WriteAsync(response);
         }
         catch
         {
             // Client has probably disconected 
         }
     }
-
-    private async Task SendScheduleMessage(Request<TReq, TRes> req, int pos)
-	{
-		var schedMessage = new Response<TRes>.SchedulerMessage<TRes>(pos);
-		try
-		{
-			await req.ResponseWriter.WriteAsync(schedMessage);
-		}
-		catch
-		{
-			// Client has probably disconected 
-		}
-	}
 }

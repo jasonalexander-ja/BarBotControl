@@ -21,6 +21,8 @@ public class Response<To>
 
     public class SchedulerLimmit<T> : Response<T> { }
 
+    public class AlreadyScheduled<T> : Response<T> { }
+
     public class SchedulerMessage<T> : Response<T>
     {
         public int Position { get; set; }

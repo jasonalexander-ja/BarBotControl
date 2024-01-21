@@ -41,10 +41,9 @@ public class SequenceService
         return models.Select(s => new SequenceModel(s)).ToList();
     }
 
-    public async Task<List<SequenceModel>> GetSequencesWithItems()
+    public async Task<SequenceModel> GetSequenceForErrType(int moduleId, int value)
     {
-        var models = await _sequenceAccessor.GetSequencesWithItems();
-        return models.Select(s => new SequenceModel(s)).ToList();
+        return new SequenceModel(await _sequenceAccessor.GetSequenceForErrType(moduleId, value));
     }
 
     public async Task<SequenceModel> UpdateSequence(SequenceModel seq)

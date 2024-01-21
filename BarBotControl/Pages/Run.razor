@@ -1,7 +1,9 @@
-﻿@using BarBotControl.Worker.Services
+﻿@using BarBotControl.Comms.Exceptions
+@using BarBotControl.Worker.Services
 @using BarBotControl.Worker.Models
 @using BarBotControl.Comms.Models
 @using System.Threading.Channels
+@using BarBotControl.Config
 @using Response = BarBotControl.Worker.Models.Response<BarBotControl.Comms.Models.ResponseType>
 @implements IDisposable
 
@@ -9,10 +11,13 @@
 
 @inject SequenceService _sequenceService
 @inject SequenceItemService _sequenceItemService
+@inject ErrorTypeService _errorTypeService
 @inject ISnackbar _snackbar
 @inject NavigationManager _navigation
 @inject ScheduledWorkerService<RequestModel, ResponseType> _scheduleService
 @inject IDialogService _dialogService
+@inject ILocalStorageService _localStorage
+@inject ErrorHandlingService _errorHandlingService
 
 <PageTitle>Running Sequence</PageTitle>
 
@@ -53,12 +58,12 @@
             DisableElevation="true" 
             FullWidth="true"
             Disabled="!Complete"
+            OnClick="@(() => _navigation.NavigateTo("/"))"
         >
             Back To Menu 
         </MudButton>
     </MudItem>
 </MudGrid>
-
 
 
 @code {
@@ -81,13 +86,14 @@
     public Channel<Response<ResponseType>> ResponseChannel { get; set; } =
         Channel.CreateUnbounded<Response<ResponseType>>();
 
-    public async Task DispatchSequence()
+    public async Task DispatchSequence(string idpToken)
     {
         try
         {
             await _scheduleService.SchedulingSender.WriteAsync(
                 new Request<RequestModel, ResponseType>(
                     ResponseChannel.Writer, 
+                    idpToken, 
                     new RequestModel(WorkerSequenceItems)));
             await ManageResponses();
             StateHasChanged();
@@ -111,9 +117,11 @@
             var shouldContinue = response switch
             {
                 Response.SchedulerLimmit<ResponseType> => SchedulerLimnmit(),
+                Response.AlreadyScheduled<ResponseType> => AlreadyScheduled(),
                 Response.SchedulerMessage<ResponseType> r => SchedulerUpdate(r),
                 Response.WorkerMessage<ResponseType> r =>
-                    await HandleCommsWorkerResponse(r.Message)
+                    await HandleCommsWorkerResponse(r.Message),
+                _ => true
             };
             if (!shouldContinue)
             {
@@ -130,22 +138,9 @@
         {
             ResponseType.StatusUpdate s => HandleCommsWorkerStatus(s),
             ResponseType.End => CommsEnd(),
-            ResponseType.WorkerException e => await HandleError(e)
+            ResponseType.WorkerException e => await _errorHandlingService.HandleError(e, SequenceItems),
+            _ => true
         };
-    }
-
-    public async Task<bool> HandleError(ResponseType.WorkerException response)
-    {
-        if (response?.WorkerExceptionBase == null || response?.ExceptionResponseSender == null)
-        {
-            Error();
-            return false;
-        }
-        bool? result = await _dialogService.ShowMessageBox(
-            "Warning",
-            "Deleting can not be undone!",
-            yesText: "Delete!", cancelText: "Cancel");
-        return true;
     }
 
     public bool CommsEnd()
@@ -164,7 +159,7 @@
         }
         var itemIndex = SequenceItems.IndexOf(item);
         var itemDescription = $"{item.Module.Name}: {item.Option.Name}";
-        StatusMessage = $"{itemIndex}/{SequenceItems.Count()}: {itemDescription}";
+        StatusMessage = $"{itemIndex + 1 }/{SequenceItems.Count()}: {itemDescription}";
         return true;
     }
 
@@ -189,20 +184,47 @@
         return false;
     }
 
-    protected override async Task OnInitializedAsync()
+    public bool AlreadyScheduled()
     {
+        _snackbar.Add(
+            "You already have a request scheduled. ",
+            Severity.Warning);
+        _navigation.NavigateTo("/");
+        return false;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
         try
         {
             Sequence = await _sequenceService.GetSequence(SequenceId);
             SequenceItems = await _sequenceItemService.GetItemsForSeqWithModuleOpt(SequenceId);
             WorkerSequenceItems = SequenceItems.Select(s => new WorkerSequenceItem()
-            {
-                Index = s.Index,
-                ModuleAddress = s.Module.Channel,
-                Option = s.Option.OptionValue
-            }).ToList();
+                {
+                    Index = s.Index,
+                    ModuleAddress = s.Module.Channel,
+                    Option = s.Option.OptionValue
+                })
+                .OrderBy(s => s.Index)
+                .Reverse()
+                .ToList();
             Loading = false;
             StateHasChanged();
+            string idpToken = await _localStorage.GetItemAsStringAsync(SessionKeys.RequestIdempotencyKey);
+            if (string.IsNullOrEmpty(idpToken))
+            {
+                idpToken = Guid.NewGuid().ToString();
+                await _localStorage.SetItemAsStringAsync(SessionKeys.RequestIdempotencyKey, idpToken);
+            }
+            DispatchSequence(idpToken);
+        }
+        catch (ObjectNotFoundException)
+        {
+            _snackbar.Add("That's weird, we can't find this sequence. ", Severity.Error);
+            _navigation.NavigateTo("/");
+            return;
         }
         catch
         {

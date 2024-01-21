@@ -2,7 +2,7 @@
 using BarBotControl.Comms.Models;
 using BarBotControl.Comms.Exceptions;
 using System.Threading.Channels;
-using Response = BarBotControl.Worker.Models.Response<BarBotControl.Comms.Models.ResponseType>
+using Response = BarBotControl.Worker.Models.Response<BarBotControl.Comms.Models.ResponseType>;
 
 namespace BarBotControl.Comms.Worker;
 
@@ -86,7 +86,7 @@ public static class CommsWorker
 				? new I2cMock(item.ModuleAddress, Config) 
 				: new I2cWrapper(item.ModuleAddress, Config.I2cChannel);
 			i2c.WriteByte(Convert.ToByte(item.Option));
-			var result = TryRead(i2c, item);
+			var result = TryRead(i2c);
 			if (result != 0)
 			{
 				throw new ModuleReturnedException(item.ModuleAddress, item.Option, result, item.Index);
@@ -98,13 +98,12 @@ public static class CommsWorker
 		}
 		catch (IOException ex)
 		{
-			throw new I2cCommunicationException(Config.I2cChannel, item.ModuleAddress, ex);
+			throw new I2cCommunicationException(item.Index, Config.I2cChannel, item.ModuleAddress, ex);
 		}
 	}
 
-	private static int TryRead(II2cWrapper i2c, WorkerSequenceItem item)
+	private static int TryRead(II2cWrapper i2c)
 	{
-		var timeOutTime = DateTime.Now + TimeSpan.FromSeconds(Config.TimeoutSeconds);
 		while (true)
 		{
 			byte[] res = i2c.Read();
@@ -113,10 +112,6 @@ public static class CommsWorker
 				return res.LastOrDefault((byte)0);
 			}
 			Thread.Sleep(200);
-			if (DateTime.Now > timeOutTime)
-			{
-				throw new ModuleTimedOutException(item.ModuleAddress, item.Option, item.Index);
-			}
 		}
 	}
 }
