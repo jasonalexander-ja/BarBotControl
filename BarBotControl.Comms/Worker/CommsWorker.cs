@@ -2,6 +2,7 @@
 using BarBotControl.Comms.Models;
 using BarBotControl.Comms.Exceptions;
 using System.Threading.Channels;
+using Response = BarBotControl.Worker.Models.Response<BarBotControl.Comms.Models.ResponseType>
 
 namespace BarBotControl.Comms.Worker;
 
@@ -9,13 +10,14 @@ public static class CommsWorker
 {
 	public static WorkerConfig Config { get; set; } = new WorkerConfig();
 
-    public static async Task Run(Request<RequestModel, ResponseModel> request)
+    public static async Task Run(Request<RequestModel, ResponseType> request)
 	{
 		var sequenceItems = request.RequestBody.WorkerSequenceItems;
 		await RunSequence(sequenceItems, request.ResponseWriter);
 		try
         {
-            request.ResponseWriter.Complete();
+            await request.ResponseWriter.WriteAsync(
+				new Response.WorkerMessage<ResponseType>(new ResponseType.End()));
         }
 		catch
 		{
@@ -24,12 +26,13 @@ public static class CommsWorker
 	}
 
 	private static async Task RunSequence(List<WorkerSequenceItem> sequenceItems, 
-		ChannelWriter<Response<ResponseModel>> responseWriter)
+		ChannelWriter<Response> responseWriter)
 	{
 		foreach (var (seqItem, index) in sequenceItems.Select((s, i) => (s, i)))
 		{
 			try
 			{
+				await SendStatusUpdate(seqItem, responseWriter);
                 Dispatch(seqItem);
             }
 			catch (WorkerExceptionBase ex)
@@ -44,13 +47,13 @@ public static class CommsWorker
 
 	private static async Task<ExceptionResponse> HandleException(
 		WorkerExceptionBase ex,
-		ChannelWriter<Response<ResponseModel>> responseWriter)
+		ChannelWriter<Response> responseWriter)
 	{
 		var responseChannel = Channel.CreateUnbounded<ExceptionResponse>();
 		try
 		{
-			await responseWriter.WriteAsync(Response<ResponseModel>.WorkerMessage(
-				ResponseModel.ExceptionResponse(ex, responseChannel.Writer)
+			await responseWriter.WriteAsync(new Response.WorkerMessage<ResponseType>(
+                new ResponseType.WorkerException(ex, responseChannel.Writer)
 			));
             return await responseChannel.Reader.ReadAsync();
         }
@@ -59,6 +62,21 @@ public static class CommsWorker
 			return ExceptionResponse.PerformSequenceHalt(Config.DefaultResetRoutine);
         }
 	}
+
+	private static async Task SendStatusUpdate(WorkerSequenceItem item,
+        ChannelWriter<Response> responseWriter)
+	{
+		try
+		{
+			var statusUpdate = new Response.WorkerMessage<ResponseType>(
+                new ResponseType.StatusUpdate(item));
+            await responseWriter.WriteAsync(statusUpdate);
+        }
+		catch
+        {
+            // User disconnected 
+        }
+    }
 
 	private static void Dispatch(WorkerSequenceItem item)
 	{

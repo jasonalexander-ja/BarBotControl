@@ -14,9 +14,9 @@ public class ScheduledWorkerService<TReq, TRes>
 		get => Scheduler.SchedulingChannel.Writer;
 	}
 
-	public ScheduledWorkerService(Func<Request<TReq, TRes>, Task> task)
+	public ScheduledWorkerService(int queueLimmit, Func<Request<TReq, TRes>, Task> task)
 	{
 		Worker = new WorkerService<TReq, TRes>(task);
-		Scheduler = new SchedulingService<TReq, TRes>(Worker.WorkerChannel.Writer, Worker.WorkRequestChannel.Reader);
+		Scheduler = new SchedulingService<TReq, TRes>(queueLimmit, Worker.WorkerChannel.Writer, Worker.WorkRequestChannel.Reader);
 	}
 }

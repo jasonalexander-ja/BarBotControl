@@ -1,0 +1,212 @@
+﻿@using BarBotControl.Worker.Services
+@using BarBotControl.Worker.Models
+@using BarBotControl.Comms.Models
+@using System.Threading.Channels
+@using Response = BarBotControl.Worker.Models.Response<BarBotControl.Comms.Models.ResponseType>
+@implements IDisposable
+
+@page "/Run/{SequenceId:int}"
+
+@inject SequenceService _sequenceService
+@inject SequenceItemService _sequenceItemService
+@inject ISnackbar _snackbar
+@inject NavigationManager _navigation
+@inject ScheduledWorkerService<RequestModel, ResponseType> _scheduleService
+@inject IDialogService _dialogService
+
+<PageTitle>Running Sequence</PageTitle>
+
+<MudGrid Class="pb-2" Spacing="0" Justify="Justify.Center">
+    <MudItem xs="12" sm="7">
+        <MudText Typo="Typo.h6" Class="d-flex align-center px-1">
+            <MudIconButton 
+                Icon="@Icons.Material.Filled.ArrowBack"
+                aria-label="Go Back"
+                OnClick=@(() => _navigation.NavigateTo("/"))
+                Size="Size.Medium"
+                Color="Color.Secondary"
+            />
+            Run Sequence
+        </MudText>
+    </MudItem>
+</MudGrid>
+
+<MudGrid Class="pb-2" Justify="Justify.Center">
+    <MudItem xs="12" sm="7">
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.subtitle1" Color="Color.Secondary">Status</MudText>
+                <MudText Typo="Typo.h5">
+                    @StatusMessage
+                </MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+<MudGrid Class="pb-2" Justify="Justify.Center">
+    <MudItem xs="12" sm="7">
+        <MudButton 
+            Variant="Variant.Filled" 
+            aria-label="Save edit"
+            Color="Color.Primary"
+            DisableElevation="true" 
+            FullWidth="true"
+            Disabled="!Complete"
+        >
+            Back To Menu 
+        </MudButton>
+    </MudItem>
+</MudGrid>
+
+
+
+@code {
+
+    [Parameter]
+    public int SequenceId { get; set; }
+
+    public SequenceModel Sequence { get; set; } = new SequenceModel();
+    public List<SequenceItemModel> SequenceItems { get; set; } = new List<SequenceItemModel>();
+    public List<WorkerSequenceItem> WorkerSequenceItems { get; set; } = new List<WorkerSequenceItem>();
+
+    public bool Loading { get; set; } = true;
+    public bool Complete { get; set; } = false;
+
+    public bool Disposed { get; set; } = false;
+    public void Dispose() => Disposed = true;
+
+    public string StatusMessage { get; set; } = "Loading.";
+
+    public Channel<Response<ResponseType>> ResponseChannel { get; set; } =
+        Channel.CreateUnbounded<Response<ResponseType>>();
+
+    public async Task DispatchSequence()
+    {
+        try
+        {
+            await _scheduleService.SchedulingSender.WriteAsync(
+                new Request<RequestModel, ResponseType>(
+                    ResponseChannel.Writer, 
+                    new RequestModel(WorkerSequenceItems)));
+            await ManageResponses();
+            StateHasChanged();
+        }
+        catch
+        {
+            _snackbar.Add(
+                "There was an error trying to add your request to the queue, please contact an admin. ", 
+                Severity.Error);
+            _navigation.NavigateTo("/");
+        }
+    }
+
+    public async Task ManageResponses()
+    {
+        while (true)
+        {
+            var response = await ResponseChannel.Reader.ReadAsync();
+            if (Disposed) 
+                return;
+            var shouldContinue = response switch
+            {
+                Response.SchedulerLimmit<ResponseType> => SchedulerLimnmit(),
+                Response.SchedulerMessage<ResponseType> r => SchedulerUpdate(r),
+                Response.WorkerMessage<ResponseType> r =>
+                    await HandleCommsWorkerResponse(r.Message)
+            };
+            if (!shouldContinue)
+            {
+                Complete = true;
+                break;
+            }
+            StateHasChanged();
+        }
+    }
+
+    public async Task<bool> HandleCommsWorkerResponse(ResponseType response)
+    {
+        return response switch
+        {
+            ResponseType.StatusUpdate s => HandleCommsWorkerStatus(s),
+            ResponseType.End => CommsEnd(),
+            ResponseType.WorkerException e => await HandleError(e)
+        };
+    }
+
+    public async Task<bool> HandleError(ResponseType.WorkerException response)
+    {
+        if (response?.WorkerExceptionBase == null || response?.ExceptionResponseSender == null)
+        {
+            Error();
+            return false;
+        }
+        bool? result = await _dialogService.ShowMessageBox(
+            "Warning",
+            "Deleting can not be undone!",
+            yesText: "Delete!", cancelText: "Cancel");
+        return true;
+    }
+
+    public bool CommsEnd()
+    {
+        StatusMessage = $"Complete";
+        return false;
+    }
+
+    public bool HandleCommsWorkerStatus(ResponseType.StatusUpdate statusUpdate)
+    {
+        var item = SequenceItems.FirstOrDefault(s => s.Index == statusUpdate.SequenceIndex);
+        if (item == null)
+        {
+            StatusMessage = $"Processing";
+            return true;
+        }
+        var itemIndex = SequenceItems.IndexOf(item);
+        var itemDescription = $"{item.Module.Name}: {item.Option.Name}";
+        StatusMessage = $"{itemIndex}/{SequenceItems.Count()}: {itemDescription}";
+        return true;
+    }
+
+    public void Error()
+    {
+        _snackbar.Add($"Something went really wrong, go yell at Jason. ", Severity.Error);
+        _navigation.NavigateTo("/");
+    }
+
+    public bool SchedulerUpdate(Response.SchedulerMessage<ResponseType> schedMsg)
+    {
+        StatusMessage = $"Line no. #{schedMsg.Position}";
+        return true;
+    }
+
+    public bool SchedulerLimnmit()
+    {
+        _snackbar.Add(
+            "There are too many people waiting on requests right now, please check back later. ",
+            Severity.Warning);
+        _navigation.NavigateTo("/");
+        return false;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Sequence = await _sequenceService.GetSequence(SequenceId);
+            SequenceItems = await _sequenceItemService.GetItemsForSeqWithModuleOpt(SequenceId);
+            WorkerSequenceItems = SequenceItems.Select(s => new WorkerSequenceItem()
+            {
+                Index = s.Index,
+                ModuleAddress = s.Module.Channel,
+                Option = s.Option.OptionValue
+            }).ToList();
+            Loading = false;
+            StateHasChanged();
+        }
+        catch
+        {
+            _snackbar.Add("Something went really wrong, go yell at Jason. ", Severity.Error);
+        }
+    }
+}

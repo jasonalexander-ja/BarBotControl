@@ -9,15 +9,20 @@ namespace BarBotControl.Comms.Models;
 public class StatusUpdate
 {
 	public int SequenceIndex { get; set; }
-	public int ModuleId { get; set; }
-	public int OptionId { get; set; }
-	public string Description { get; set; } = string.Empty;
+	public int ModuleAddress { get; set; }
+	public int Option { get; set; }
 	
-	public StatusUpdate(int sequenceIndex, int moduleId, int optionId, string desc)
+	public StatusUpdate(int sequenceIndex, int moduleAddr, int option)
 	{
 		SequenceIndex = sequenceIndex;
-		ModuleId = moduleId;
-		OptionId = optionId;
-		Description = desc;
+		ModuleAddress = moduleAddr;
+		Option = option;
 	}
+
+	public StatusUpdate(WorkerSequenceItem item)
+	{
+		SequenceIndex = item.Index;
+        ModuleAddress = item.ModuleAddress;
+        Option = item.Option;
+    }
 }

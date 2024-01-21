@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BarBotControl", "BarBotControl\BarBotControl.csproj", "{34F41BEB-91F7-4205-B71A-5E8EFC88F883}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BarBotControl", "BarBotControl\BarBotControl.csproj", "{34F41BEB-91F7-4205-B71A-5E8EFC88F883}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BarBotControl.Worker", "BarBotControl.Worker\BarBotControl.Worker.csproj", "{A5AAFB85-4183-42FB-BA86-F433B2727753}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BarBotControl.Worker", "BarBotControl.Worker\BarBotControl.Worker.csproj", "{A5AAFB85-4183-42FB-BA86-F433B2727753}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BarBotControl.Comms", "BarBotControl.Comms\BarBotControl.Comms.csproj", "{B26B245A-777C-4397-9A1F-D0B1F9BF3413}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BarBotControl.Comms", "BarBotControl.Comms\BarBotControl.Comms.csproj", "{B26B245A-777C-4397-9A1F-D0B1F9BF3413}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

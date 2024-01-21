@@ -26,9 +26,12 @@ public class SchedulingService<TReq, TRes>
 	/// </summary>
 	private ChannelReader<bool> WorkRequestReceiver { get; set; }
 
-	public SchedulingService(ChannelWriter<Request<TReq, TRes>> workerSender, ChannelReader<bool> workRequestReceiver)
+	private int QueueLimmit { get; set; } = 10;
+
+	public SchedulingService(int queueLimmit, ChannelWriter<Request<TReq, TRes>> workerSender, ChannelReader<bool> workRequestReceiver)
 	{
-		SchedulingChannel = Channel.CreateUnbounded<Request<TReq, TRes>>();
+		QueueLimmit = queueLimmit;
+        SchedulingChannel = Channel.CreateUnbounded<Request<TReq, TRes>>();
 		WorkSender = workerSender;
 		WorkRequestReceiver = workRequestReceiver;
 		SchedulingThread = new Thread(async () => await Scheduler(SchedulingChannel.Reader));
@@ -43,8 +46,15 @@ public class SchedulingService<TReq, TRes>
 			var isReq = requestReceiver.TryRead(out var req);
 			if (isReq && req is not null)
 			{
-				await SendScheduleMessage(req, requests.Count() + 1);
-				requests.Enqueue(req);
+				if (requests.Count() < QueueLimmit)
+				{
+					await SendScheduleMessage(req, requests.Count() + 1);
+					requests.Enqueue(req);
+				}
+				else
+				{
+					await SendScheduleFullMessage(req);
+                }
 			}
 			var isWorkReq = WorkRequestReceiver.TryRead(out var _);
 			if (isWorkReq)
@@ -63,11 +73,24 @@ public class SchedulingService<TReq, TRes>
 		{
 			await SendScheduleMessage(v, i + 1);
 		}
-	}
+    }
 
-	private async Task SendScheduleMessage(Request<TReq, TRes> req, int pos)
+    private async Task SendScheduleFullMessage(Request<TReq, TRes> req)
+    {
+        var schedMessage = new Response<TRes>.SchedulerLimmit<TRes>();
+        try
+        {
+            await req.ResponseWriter.WriteAsync(schedMessage);
+        }
+        catch
+        {
+            // Client has probably disconected 
+        }
+    }
+
+    private async Task SendScheduleMessage(Request<TReq, TRes> req, int pos)
 	{
-		var schedMessage = Response<TRes>.SchedulerMessage(pos);
+		var schedMessage = new Response<TRes>.SchedulerMessage<TRes>(pos);
 		try
 		{
 			await req.ResponseWriter.WriteAsync(schedMessage);

@@ -10,7 +10,9 @@ public static class WorkerExtensions
     {
         var workerConfig = builder.Configuration.GetSection("WorkerConfig").Get<WorkerConfig>();
         CommsWorker.Config = workerConfig;
-        builder.Services.AddSingleton(new ScheduledWorkerService<RequestModel, ResponseModel>(CommsWorker.Run));
+        var schedulerLimmit = (int)builder.Configuration.GetValue(typeof(int), "SchedulerConfig:QueueLimmit");
+        schedulerLimmit = schedulerLimmit == 0 ? 10 : schedulerLimmit;
+        builder.Services.AddSingleton(new ScheduledWorkerService<RequestModel, ResponseModel>(schedulerLimmit, CommsWorker.Run));
 
         return builder;
     }

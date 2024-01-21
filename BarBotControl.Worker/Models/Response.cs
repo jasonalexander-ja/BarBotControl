@@ -6,42 +6,27 @@ using System.Threading.Tasks;
 
 namespace BarBotControl.Worker.Models;
 
-public class Response<T>
+public class Response<To>
 {
-	public ResponseType Type { get; set; }
-	public SchedulingMessage? SchedulingMessage { get; set; }
-	public T? Message { get; set; }
+	private Response() { }
 
-	public bool IsWorkerMessage
-	{
-		get => Type == ResponseType.WorkerMessage;
-	}
-	public bool IsSchedulerMessage
-	{
-		get => Type == ResponseType.SchedulerMessage;
-	}
+    public class WorkerMessage<T> : Response<T>
+    {
+        public T Message { get; set; }
+        public WorkerMessage(T message)
+        {
+            Message = message;
+        }
+    }
 
-	public static Response<T> SchedulerMessage(int pos)
-	{
-		return new Response<T>()
-		{
-			Type = ResponseType.SchedulerMessage,
-			SchedulingMessage = new SchedulingMessage(pos)
-		};
-	}
+    public class SchedulerLimmit<T> : Response<T> { }
 
-	public static Response<T> WorkerMessage(T message)
-	{
-		return new Response<T>()
-		{
-			Type = ResponseType.WorkerMessage,
-			Message = message
-		};
-	}
-}
-
-public enum ResponseType
-{
-	WorkerMessage,
-	SchedulerMessage
+    public class SchedulerMessage<T> : Response<T>
+    {
+        public int Position { get; set; }
+        public SchedulerMessage(int position)
+        {
+            Position = position;
+        }
+    }
 }
