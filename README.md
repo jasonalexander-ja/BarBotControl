@@ -102,3 +102,9 @@ dotnet run
 Then navigate to the address [localhost:5001](https://localhost:5001).
 
 If you have Visual Studio or VS Code with the C# extension installed, you can debug the application (set breakpoints, view the watch ext.) by opening the solution from the root in Visual Studio or VS Code and pressing `F5`. 
+
+### Configuration
+
+In `appsettings.json`:
+
+- `EnableMSALForTesting`: This flag enables the MSAL authentication for the deployed testing instance, set this to `false` for local debugging. 

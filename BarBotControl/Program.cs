@@ -11,6 +11,14 @@ StaticWebAssetsLoader.UseStaticWebAssets(builder.Environment, builder.Configurat
 builder.AddDatabase();
 builder.AddDataServices();
 
+var isMsalEnmabled = builder.Configuration.GetSection("EnableMSALForTesting")
+        .Get<bool>();
+
+if (isMsalEnmabled)
+{
+	builder.AddMicrosoftAuth();
+}
+
 builder.AddSudoUserService();
 
 builder.AddWorker();
@@ -22,6 +30,7 @@ builder.Services.AddMudServices();
 
 builder.Services.AddBlazoredLocalStorage();
 
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -32,12 +41,24 @@ if (!app.Environment.IsDevelopment())
 	app.UseHsts();
 }
 
+if (isMsalEnmabled)
+{
+    app.UseForwardedHeaders();
+}
+
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 
 app.UseRouting();
 
+if (isMsalEnmabled)
+{
+	app.UseAuthentication();
+	app.UseAuthorization();
+}
+
+app.MapControllers();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 

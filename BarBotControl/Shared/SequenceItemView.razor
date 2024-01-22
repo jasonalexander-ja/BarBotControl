@@ -79,7 +79,9 @@
             <PagerContent>
                 @if (SequenceItems.Count() > 10)
                 {
-                    <MudTablePager />
+                    <MudTablePager 
+                        PageSizeOptions="new int[] { 3, 5 }" 
+                    />
                 }
             </PagerContent>
         </MudTable>
