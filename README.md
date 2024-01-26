@@ -107,4 +107,5 @@ If you have Visual Studio or VS Code with the C# extension installed, you can de
 
 In `appsettings.json`:
 
+- `EnableConsoleDBLogging`: This flag enables the logging database information to the console, useful for debugging. 
 - `EnableMSALForTesting`: This flag enables the MSAL authentication for the deployed testing instance, set this to `false` for local debugging. 
