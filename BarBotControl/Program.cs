@@ -33,6 +33,18 @@ builder.Services.AddBlazoredLocalStorage();
 
 var app = builder.Build();
 
+// The protocol doesn't get set from the forwarding header middleware when running behind 
+// a reverse proxy in a Docker Container for some reason 
+var shouldForceHttps = Environment.GetEnvironmentVariable("FORCE_HTTPS") ?? "";
+if (shouldForceHttps == "true" && isMsalEnmabled)
+{
+	app.Use((context, next) =>
+	{
+		context.Request.Scheme = "https";
+		return next(context);
+	});
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
