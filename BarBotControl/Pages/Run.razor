@@ -201,7 +201,7 @@
         {
             Sequence = await _sequenceService.GetSequence(SequenceId);
             SequenceItems = await _sequenceItemService.GetItemsForSeqWithModuleOpt(SequenceId);
-            SequenceItems = SequenceItems.OrderBy(s => s.Index).Reverse().ToList();
+            SequenceItems = SequenceItems.OrderBy(s => s.Index).ToList();
             WorkerSequenceItems = SequenceItems.Select(s => new WorkerSequenceItem()
                 {
                     Index = s.Index,
@@ -209,7 +209,6 @@
                     Option = s.Option.OptionValue
                 })
                 .OrderBy(s => s.Index)
-                .Reverse()
                 .ToList();
             Loading = false;
             StateHasChanged();

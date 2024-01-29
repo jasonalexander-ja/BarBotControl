@@ -46,7 +46,6 @@ public class SequenceItemService
         var models = await _sequenceItemAccessor.GetItemsForSeqWithModuleOpt(seqId);
         var viewModels = models.Select(s => new SequenceItemModel(s))
             .OrderBy(s => s.Index)
-            .Reverse()
             .ToList();
         return models.Select(s => new SequenceItemModel(s)).ToList();
     }
