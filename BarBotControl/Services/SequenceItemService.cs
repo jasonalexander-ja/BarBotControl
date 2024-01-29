@@ -44,6 +44,10 @@ public class SequenceItemService
     public async Task<List<SequenceItemModel>> GetItemsForSeqWithModuleOpt(int seqId)
     {
         var models = await _sequenceItemAccessor.GetItemsForSeqWithModuleOpt(seqId);
+        var viewModels = models.Select(s => new SequenceItemModel(s))
+            .OrderBy(s => s.Index)
+            .Reverse()
+            .ToList();
         return models.Select(s => new SequenceItemModel(s)).ToList();
     }
 
