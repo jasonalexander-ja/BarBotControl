@@ -56,9 +56,8 @@ if (!app.Environment.IsDevelopment())
 if (isMsalEnmabled)
 {
     app.UseForwardedHeaders();
+    app.UseHttpsRedirection();
 }
-
-app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 
