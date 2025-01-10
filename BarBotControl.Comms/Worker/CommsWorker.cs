@@ -12,7 +12,10 @@ public static class CommsWorker
 
     public static async Task Run(Request<RequestModel, ResponseType> request)
 	{
-		await WaitForUserConfirmation(request);
+		if (request.CancelChannel.TryRead(out var _)) return;
+
+		if (!await WaitForUserConfirmation(request)) return;
+
         var sequenceItems = request.RequestBody.WorkerSequenceItems;
 		await RunSequence(sequenceItems, request.ResponseWriter);
 		try
@@ -26,7 +29,7 @@ public static class CommsWorker
 		}
 	}
 
-	public static async Task WaitForUserConfirmation(Request<RequestModel, ResponseType> request)
+	public static async Task<bool> WaitForUserConfirmation(Request<RequestModel, ResponseType> request)
     {
         var channel = Channel.CreateUnbounded<bool>();
 		var userMessage = new Response.WorkerMessage<ResponseType>(
@@ -34,11 +37,15 @@ public static class CommsWorker
         try
 		{
 			await request.ResponseWriter.WriteAsync(userMessage);
-			await channel.Reader.ReadAsync();
+			while (true)
+            {
+                if (channel.Reader.TryRead(out var _)) return true;
+				if (request.CancelChannel.TryRead(out var _)) return false;
+            }
 		}
 		catch
 		{
-			// User disconnected 
+			return true;
 		}
 
     }

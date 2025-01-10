@@ -25,11 +25,11 @@
     <MudItem xs="12" sm="7">
         <MudText Typo="Typo.h6" Class="d-flex align-center px-1">
             <MudIconButton 
-                Icon="@Icons.Material.Filled.ArrowBack"
-                aria-label="Go Back"
-                OnClick=@(() => _navigation.NavigateTo("/"))
-                Size="Size.Medium"
-                Color="Color.Secondary"
+            Icon="@Icons.Material.Filled.ArrowBack"
+            aria-label="Go Back"
+            OnClick=@(() => _navigation.NavigateTo("/"))
+            Size="Size.Medium"
+            Color="Color.Secondary"
             />
             Run Sequence
         </MudText>
@@ -51,13 +51,13 @@
                         @if (ConfirmResponseWriter is not null)
                         {
                             <MudButton 
-                                Variant="Variant.Outlined"
-                                aria-label="Save edit"
-                                Color="Color.Primary"
-                                DisableElevation="true"
-                                FullWidth="true"
-                                Size="Size.Small"
-                                OnClick="@(() => ConfirmContinue())"
+                            Variant="Variant.Outlined"
+                            aria-label="Save edit"
+                            Color="Color.Primary"
+                            DisableElevation="true"
+                            FullWidth="true"
+                            Size="Size.Small"
+                            OnClick="@(() => ConfirmContinue())"
                             >
                                 Continue
                             </MudButton>
@@ -72,13 +72,13 @@
 <MudGrid Class="pb-2" Justify="Justify.Center">
     <MudItem xs="12" sm="7">
         <MudButton 
-            Variant="Variant.Filled" 
-            aria-label="Save edit"
-            Color="Color.Primary"
-            DisableElevation="true" 
-            FullWidth="true"
-            Disabled="!Complete"
-            OnClick="@(() => _navigation.NavigateTo("/"))"
+        Variant="Variant.Filled" 
+        aria-label="Save edit"
+        Color="Color.Primary"
+        DisableElevation="true" 
+        FullWidth="true"
+        Disabled="!Complete"
+        OnClick="@(() => _navigation.NavigateTo("/"))"
         >
             Back To Menu 
         </MudButton>
@@ -101,7 +101,15 @@
     public bool Complete { get; set; } = false;
 
     public bool Disposed { get; set; } = false;
-    public void Dispose() => Disposed = true;
+    public void Dispose()
+    {
+        try
+        {
+            CancelChannel.Writer.TryWrite(true);
+        }
+        catch { }
+        Disposed = true;
+    }
 
     public string StatusMessage { get; set; } = "Loading.";
 
@@ -109,6 +117,8 @@
         Channel.CreateUnbounded<Response<ResponseType>>();
 
     public ChannelWriter<bool>? ConfirmResponseWriter { get; set; }
+    public Channel<bool> CancelChannel { get; set; } =
+        Channel.CreateUnbounded<bool>();
 
     public async Task ConfirmContinue()
     {
@@ -125,6 +135,7 @@
             await _scheduleService.SchedulingSender.WriteAsync(
                 new Request<RequestModel, ResponseType>(
                     ResponseChannel.Writer, 
+                    CancelChannel.Reader,
                     IdpToken, 
                     new RequestModel(WorkerSequenceItems)));
             await ManageResponses();
