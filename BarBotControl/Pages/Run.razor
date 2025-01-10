@@ -40,10 +40,30 @@
     <MudItem xs="12" sm="7">
         <MudCard>
             <MudCardContent>
+
+
                 <MudText Typo="Typo.subtitle1" Color="Color.Secondary">Status</MudText>
                 <MudText Typo="Typo.h5">
                     @StatusMessage
                 </MudText>
+                <MudGrid Class="pt-2" Justify="Justify.Center">
+                    <MudItem xs="12">
+                        @if (ConfirmResponseWriter is not null)
+                        {
+                            <MudButton 
+                                Variant="Variant.Outlined"
+                                aria-label="Save edit"
+                                Color="Color.Primary"
+                                DisableElevation="true"
+                                FullWidth="true"
+                                Size="Size.Small"
+                                OnClick="@(() => ConfirmContinue())"
+                            >
+                                Continue
+                            </MudButton>
+                        }
+                    </MudItem>
+                </MudGrid>
             </MudCardContent>
         </MudCard>
     </MudItem>
@@ -71,6 +91,8 @@
     [Parameter]
     public int SequenceId { get; set; }
 
+    public string IdpToken { get; set; } = "";
+
     public SequenceModel Sequence { get; set; } = new SequenceModel();
     public List<SequenceItemModel> SequenceItems { get; set; } = new List<SequenceItemModel>();
     public List<WorkerSequenceItem> WorkerSequenceItems { get; set; } = new List<WorkerSequenceItem>();
@@ -86,14 +108,24 @@
     public Channel<Response<ResponseType>> ResponseChannel { get; set; } =
         Channel.CreateUnbounded<Response<ResponseType>>();
 
-    public async Task DispatchSequence(string idpToken)
+    public ChannelWriter<bool>? ConfirmResponseWriter { get; set; }
+
+    public async Task ConfirmContinue()
+    {
+        if (ConfirmResponseWriter is null) 
+            return;
+        await ConfirmResponseWriter.WriteAsync(true);
+        ConfirmResponseWriter = null;
+    }
+
+    public async Task DispatchSequence()
     {
         try
         {
             await _scheduleService.SchedulingSender.WriteAsync(
                 new Request<RequestModel, ResponseType>(
                     ResponseChannel.Writer, 
-                    idpToken, 
+                    IdpToken, 
                     new RequestModel(WorkerSequenceItems)));
             await ManageResponses();
             StateHasChanged();
@@ -139,6 +171,7 @@
             ResponseType.StatusUpdate s => HandleCommsWorkerStatus(s),
             ResponseType.End => CommsEnd(),
             ResponseType.WorkerException e => await _errorHandlingService.HandleError(e, SequenceItems),
+            ResponseType.ConfirmContinue c => HandleConfirmContinue(c),
             _ => true
         };
     }
@@ -147,6 +180,13 @@
     {
         StatusMessage = $"Complete";
         return false;
+    }
+
+    public bool HandleConfirmContinue(ResponseType.ConfirmContinue confirmContinue)
+    {
+        StatusMessage = confirmContinue.Message;
+        ConfirmResponseWriter = confirmContinue.ResponseSender;
+        return true;
     }
 
     public bool HandleCommsWorkerStatus(ResponseType.StatusUpdate statusUpdate)
@@ -212,13 +252,15 @@
                 .ToList();
             Loading = false;
             StateHasChanged();
-            string idpToken = await _localStorage.GetItemAsStringAsync(SessionKeys.RequestIdempotencyKey);
-            if (string.IsNullOrEmpty(idpToken))
+            IdpToken = await _localStorage.GetItemAsStringAsync(SessionKeys.RequestIdempotencyKey);
+            if (string.IsNullOrEmpty(IdpToken))
             {
-                idpToken = Guid.NewGuid().ToString();
-                await _localStorage.SetItemAsStringAsync(SessionKeys.RequestIdempotencyKey, idpToken);
+                IdpToken = Guid.NewGuid().ToString();
+                await _localStorage.SetItemAsStringAsync(SessionKeys.RequestIdempotencyKey, IdpToken);
             }
-            DispatchSequence(idpToken);
+#pragma warning disable CS4014
+            DispatchSequence();
+#pragma warning restore CS4014
         }
         catch (ObjectNotFoundException)
         {

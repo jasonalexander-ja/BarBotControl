@@ -29,6 +29,18 @@ public class ResponseType
         }
     }
 
+    public class ConfirmContinue : ResponseType
+    {
+        public ChannelWriter<bool> ResponseSender { get; set; }
+        public string Message { get; set; }
+
+        public ConfirmContinue(string message, ChannelWriter<bool> responseSender) 
+        {
+            Message = message;
+            ResponseSender = responseSender;
+        }
+    }
+
     public class WorkerException : ResponseType
     {
         public WorkerExceptionBase WorkerExceptionBase { get; set; }

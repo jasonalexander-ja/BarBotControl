@@ -12,7 +12,8 @@ public static class CommsWorker
 
     public static async Task Run(Request<RequestModel, ResponseType> request)
 	{
-		var sequenceItems = request.RequestBody.WorkerSequenceItems;
+		await WaitForUserConfirmation(request);
+        var sequenceItems = request.RequestBody.WorkerSequenceItems;
 		await RunSequence(sequenceItems, request.ResponseWriter);
 		try
         {
@@ -24,6 +25,23 @@ public static class CommsWorker
 			// User disconnected 
 		}
 	}
+
+	public static async Task WaitForUserConfirmation(Request<RequestModel, ResponseType> request)
+    {
+        var channel = Channel.CreateUnbounded<bool>();
+		var userMessage = new Response.WorkerMessage<ResponseType>(
+			new ResponseType.ConfirmContinue("Please place cup", channel.Writer));
+        try
+		{
+			await request.ResponseWriter.WriteAsync(userMessage);
+			await channel.Reader.ReadAsync();
+		}
+		catch
+		{
+			// User disconnected 
+		}
+
+    }
 
 	private static async Task RunSequence(List<WorkerSequenceItem> sequenceItems, 
 		ChannelWriter<Response> responseWriter)
